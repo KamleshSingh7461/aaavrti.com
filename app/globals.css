@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  /* Aaavrti Luxe Palette */
+  /* Backgrounds: Warm, Rice Paper & Deep Obsidian */
+  --color-background: #F9F8F6;
+  --color-foreground: #1A1A1A;
+
+  /* Primary: Antique Gold */
+  --color-primary: #D4AF37;
+  --color-primary-foreground: #FFFFFF;
+
+  /* Secondary: Soft Gray / Muted Gold */
+  --color-secondary: #EAE8E4;
+  --color-secondary-foreground: #1A1A1A;
+
+  /* Accent: Deep Heritage Brown */
+  --color-accent: #5C4033;
+  --color-accent-foreground: #FFFFFF;
+
+  /* Muted & Borders */
+  --color-muted: #E6E2D3;
+  --color-muted-foreground: #666666;
+
+  --color-border: #D1CDC0;
+  --color-input: #D1CDC0;
+
+  --radius: 0rem;
+  /* Sharp, premium corners */
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border-color: var(--color-border);
+  }
+}
