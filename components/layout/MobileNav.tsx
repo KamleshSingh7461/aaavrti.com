@@ -1,6 +1,6 @@
 'use client';
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription, SheetHeader } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -34,6 +34,10 @@ export function MobileNav({ categories }: MobileNavProps) {
                 </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0 overflow-y-auto">
+                <SheetHeader className="sr-only">
+                    <SheetTitle>Navigation Menu</SheetTitle>
+                    <SheetDescription>Browse categories and account links</SheetDescription>
+                </SheetHeader>
                 {/* Header */}
                 <div className="p-6 border-b border-border/50">
                     <Link href="/" onClick={() => setIsOpen(false)} className="block w-32 relative h-10">

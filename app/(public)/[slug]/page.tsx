@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { FadeIn } from '@/components/ui/motion';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
 import { getCategories } from '@/actions/category-actions';
+import { serialize } from '@/lib/serialize';
 
 export default async function BannerLinkPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -34,16 +35,8 @@ export default async function BannerLinkPage({ params }: { params: Promise<{ slu
     // Fetch categories for filter
     const categories = await getCategories();
 
-    // Transform products for client component
-    const serializedProducts = products.map((product: any) => ({
-        ...product,
-        id: product._id.toString(),
-        price: Number(product.price),
-        images: JSON.parse(product.images || '[]'),
-        attributes: JSON.parse(product.attributes || '{}'),
-        variants: product.variants ? JSON.parse(product.variants) : null,
-        category: product.category ? { ...product.category, id: product.category._id.toString() } : null
-    }));
+    // Use serialize utility for consistent data handling
+    const serializedProducts = serialize(products);
 
     // Calculate price range
     const prices = serializedProducts.map((p: any) => p.price);
