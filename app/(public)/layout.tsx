@@ -1,5 +1,7 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+
+export const dynamic = 'force-dynamic';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { SmoothScroll } from '@/components/ui/smooth-scroll';
 import { Cormorant_Garamond } from 'next/font/google';
