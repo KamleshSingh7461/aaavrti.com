@@ -1,7 +1,7 @@
-
 import { getProducts } from '@/actions/get-products';
 import dbConnect from '@/lib/db';
 import { Category } from '@/lib/models/Product';
+import { serialize } from '@/lib/serialize';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
 import { FadeIn } from '@/components/ui/motion';
 import { Metadata } from 'next';
@@ -18,15 +18,12 @@ export default async function NewArrivalsPage() {
     await dbConnect();
 
     // Fetch filters
-    const categories = await Category.find({ parent: null }) // Using 'parent' reference instead of parentId as per Mongoose schema usually
+    const categories = await Category.find({ parent: null })
         .select('name_en slug')
         .sort({ sortOrder: 1 })
         .lean();
 
-    const serializedCategories = categories.map((c: any) => ({
-        ...c,
-        id: c._id.toString()
-    }));
+    const serializedCategories = serialize(categories);
 
     const prices = products.map((p: any) => Number(p.price));
     const minPrice = Math.floor(Math.min(...prices, 0) / 100) * 100;
