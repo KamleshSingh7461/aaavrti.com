@@ -9,6 +9,7 @@ export async function Header() {
     // @ts-ignore - Types are compatible at runtime but strict check fails due to minor differences
     const categoryTree = buildCategoryTree(categories);
     const session = await auth();
+    console.log('Server Header Session:', JSON.stringify(session, null, 2));
 
     // @ts-ignore
     return <HeaderClient categories={categoryTree} user={session?.user} />;
