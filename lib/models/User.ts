@@ -11,7 +11,7 @@ const AddressSchema = new Schema({
   postalCode: { type: String, required: true },
   country: { type: String, default: "IN" },
   phone: { type: String, required: true },
-  userId: { type: Schema.Types.ObjectId, ref: 'User' }
+  userId: { type: String, ref: 'User' }
 }, { timestamps: true });
 
 export const Address = models.Address || model('Address', AddressSchema);
@@ -36,8 +36,8 @@ export const User = models.User || model('User', UserSchema);
 
 // --- Wishlist Item Schema ---
 const WishlistItemSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  userId: { type: String, ref: 'User', required: true },
+  productId: { type: String, ref: 'Product', required: true },
 }, { timestamps: true });
 
 // Check for uniqueness

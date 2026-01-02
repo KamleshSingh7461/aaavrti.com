@@ -38,6 +38,8 @@ export const Attribute = models.Attribute || model('Attribute', AttributeSchema)
 
 // --- Product ---
 const ProductSchema = new Schema({
+  // Explicitly defining _id as String to support UUIDs from Postgres migration
+  _id: { type: String },
   name_en: { type: String, required: true },
   name_hi: { type: String },
   slug: { type: String, unique: true, required: true },
