@@ -2,8 +2,8 @@ import mongoose, { Schema, model, models } from 'mongoose';
 
 // --- Order Item Schema ---
 const OrderItemSchema = new Schema({
-    orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
-    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: 'Order' }, // Not required for embedded
+    productId: { type: String, ref: 'Product', required: true }, // Match Product _id type (String)
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
     discount: { type: Number, default: 0 },

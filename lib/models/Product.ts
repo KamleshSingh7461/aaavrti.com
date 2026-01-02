@@ -74,7 +74,7 @@ const ReviewSchema = new Schema({
   rating: { type: Number, required: true },
   comment: String,
   userId: { type: Schema.Types.ObjectId, ref: 'User' },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product' }
+  productId: { type: String, ref: 'Product' }
 }, { timestamps: true });
 
 export const Review = models.Review || model('Review', ReviewSchema);
@@ -82,7 +82,7 @@ export const Review = models.Review || model('Review', ReviewSchema);
 // --- Product View History ---
 const ProductViewSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User' },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+  productId: { type: String, ref: 'Product' },
   viewedAt: { type: Date, default: Date.now }
 });
 ProductViewSchema.index({ userId: 1, viewedAt: 1 });

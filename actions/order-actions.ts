@@ -209,7 +209,7 @@ export async function getOrderById(id: string) {
             events: (order.events || []).map((e: any) => ({ ...e, id: e._id.toString() })),
             items: (order.items || []).map((item: any) => ({
                 id: item._id.toString(),
-                orderId: item.orderId.toString(),
+                orderId: (item.orderId || order._id).toString(),
                 productId: item.productId ? item.productId._id.toString() : null,
                 quantity: item.quantity,
                 price: Number(item.price),

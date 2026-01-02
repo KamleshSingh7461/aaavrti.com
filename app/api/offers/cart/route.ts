@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
             .select('categoryId')
             .lean();
 
-        const categoryIds = [...new Set(products.map((p: any) => p.categoryId))];
+        const categoryIds = [...new Set(products.map((p: any) => p.categoryId?.toString()))].filter(Boolean);
 
         // Fetch active offers
         const now = new Date();

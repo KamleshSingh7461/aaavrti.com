@@ -1,5 +1,5 @@
-'use client';
-// Force rebuild
+// Force rebuild 2
+// Sync check at Jan 3 02:25 AM
 
 import { useEffect, useState } from 'react';
 import { CategoryNav } from '@/components/layout/CategoryNav';
