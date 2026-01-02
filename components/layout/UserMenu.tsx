@@ -4,7 +4,7 @@
 import { User as UserIcon, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { handleSignOut } from '@/actions/auth-actions';
 import { useState } from 'react';
 
 interface UserMenuProps {
@@ -93,9 +93,9 @@ export function UserMenu({ user }: UserMenuProps) {
                             Addresses
                         </Link>
                         <div
-                            onClick={() => {
+                            onClick={async () => {
                                 setIsOpen(false);
-                                signOut({ callbackUrl: '/' });
+                                await handleSignOut();
                             }}
                             className="w-full text-left block px-5 py-3 text-sm text-accent hover:text-red-600 hover:bg-secondary/20 transition-colors border-t border-border/30 cursor-pointer"
                         >

@@ -86,7 +86,7 @@ Paste the following:
 ```nginx
 server {
     listen 80;
-    server_name _;  # Or your domain name like aaavrti.com
+    server_name aaavrti.shop www.aaavrti.shop;
 
     location / {
         proxy_pass http://localhost:3000;
