@@ -2,7 +2,8 @@
 'use server';
 
 import Razorpay from 'razorpay';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Order } from '@/lib/models/Order';
 import { auth } from '@/auth';
 import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
@@ -24,32 +25,27 @@ export async function createRazorpayOrder(orderId: string) {
     });
 
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
-            include: { user: true }
-        });
+        await dbConnect();
+        const order = await Order.findById(orderId).populate('user');
 
         if (!order) return { error: 'Order not found' };
         if (order.status !== 'PENDING') return { error: 'Order is not in pending state' };
-        if (order.userId !== session.user.id) return { error: 'Unauthorized' };
+        if (order.userId.toString() !== session.user.id) return { error: 'Unauthorized' };
 
         const amountInPaise = Math.round(Number(order.total) * 100);
 
         const options = {
             amount: amountInPaise,
             currency: 'INR',
-            receipt: order.id,
+            receipt: order._id.toString(),
         };
 
         const razorpayOrder = await razorpay.orders.create(options);
 
         // Update order with payment init details if needed
-        await prisma.order.update({
-            where: { id: orderId },
-            data: {
-                paymentProtocol: 'RAZORPAY',
-                paymentData: JSON.stringify({ razorpayOrderId: razorpayOrder.id })
-            }
+        await Order.findByIdAndUpdate(orderId, {
+            paymentProtocol: 'RAZORPAY',
+            paymentData: JSON.stringify({ razorpayOrderId: razorpayOrder.id })
         });
 
         return {
@@ -86,18 +82,16 @@ export async function verifyPayment(response: {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
+        await dbConnect();
         // Update DB
-        await prisma.order.update({
-            where: { id: internalOrderId },
-            data: {
-                status: 'CONFIRMED', // Or LOADING/PROCESSING
-                paymentData: JSON.stringify({
-                    razorpay_order_id,
-                    razorpay_payment_id,
-                    razorpay_signature,
-                    status: 'captured'
-                })
-            }
+        await Order.findByIdAndUpdate(internalOrderId, {
+            status: 'CONFIRMED', // Or LOADING/PROCESSING
+            paymentData: JSON.stringify({
+                razorpay_order_id,
+                razorpay_payment_id,
+                razorpay_signature,
+                status: 'captured'
+            })
         });
 
         // Auto-ship online orders after payment confirmation

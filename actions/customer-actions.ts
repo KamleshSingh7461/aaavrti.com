@@ -1,6 +1,7 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { User } from '@/lib/models/User';
 
 export interface CustomerWithStats {
     id: string;
@@ -24,76 +25,79 @@ export async function getCustomers(filters?: {
     limit?: number;
 }) {
     try {
+        await dbConnect();
         const page = filters?.page || 1;
         const limit = filters?.limit || 20;
         const skip = (page - 1) * limit;
 
-        const where: any = {
-            role: 'USER', // Only get customers, not admins
-        };
+        const query: any = { role: 'USER' }; // Only get customers
 
         // Search filter
         if (filters?.search) {
-            where.OR = [
-                { name: { contains: filters.search } },
-                { email: { contains: filters.search } },
-                { phone: { contains: filters.search } },
+            const regex = new RegExp(filters.search, 'i');
+            query.$or = [
+                { name: { $regex: regex } },
+                { email: { $regex: regex } },
+                { phone: { $regex: regex } },
             ];
         }
 
         // Date range filter
         if (filters?.dateFrom || filters?.dateTo) {
-            where.createdAt = {};
+            query.createdAt = {};
             if (filters.dateFrom) {
-                where.createdAt.gte = new Date(filters.dateFrom);
+                query.createdAt.$gte = new Date(filters.dateFrom);
             }
             if (filters.dateTo) {
-                where.createdAt.lte = new Date(filters.dateTo);
+                query.createdAt.$lte = new Date(filters.dateTo);
             }
         }
 
-        const [customers, total] = await Promise.all([
-            prisma.user.findMany({
-                where,
-                include: {
-                    _count: {
-                        select: {
-                            orders: true,
-                        },
-                    },
-                    orders: {
-                        select: {
-                            total: true,
-                            status: true,
-                        },
-                    },
-                },
-                orderBy: {
-                    createdAt: 'desc',
-                },
-                skip,
-                take: limit,
-            }),
-            prisma.user.count({ where }),
-        ]);
+        const total = await User.countDocuments(query);
 
-        // Calculate total spent for each customer
-        const customersWithStats = customers.map(customer => {
-            const totalSpent = customer.orders
-                .filter(order => order.status !== 'CANCELLED')
-                .reduce((sum, order) => sum + Number(order.total), 0);
+        const aggregationPipeline: any[] = [
+            { $match: query },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: 'orders',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'orders'
+                }
+            },
+            {
+                $addFields: {
+                    orderCount: { $size: '$orders' },
+                    totalSpent: {
+                        $reduce: {
+                            input: '$orders',
+                            initialValue: 0,
+                            in: { $add: ['$$value', { $ifNull: ['$$this.total', 0] }] }
+                        }
+                    }
+                }
+            },
+            { $project: { orders: 0, password: 0 } }
+        ];
 
-            return {
-                id: customer.id,
-                name: customer.name,
-                email: customer.email,
-                phone: customer.phone,
-                createdAt: customer.createdAt,
-                emailVerified: customer.emailVerified,
-                _count: customer._count,
-                totalSpent,
-            };
-        });
+        const customers = await User.aggregate(aggregationPipeline);
+
+        // Map to interface
+        const customersWithStats = customers.map((customer: any) => ({
+            id: customer._id.toString(),
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+            createdAt: customer.createdAt,
+            emailVerified: customer.emailVerified,
+            _count: {
+                orders: customer.orderCount
+            },
+            totalSpent: customer.totalSpent
+        }));
 
         return {
             customers: customersWithStats,
@@ -115,62 +119,43 @@ export async function getCustomers(filters?: {
 // Get single customer by ID with full details
 export async function getCustomerById(id: string) {
     try {
-        const customer = await prisma.user.findUnique({
-            where: { id },
-            include: {
-                addresses: true,
-                orders: {
-                    include: {
-                        items: {
-                            include: {
-                                product: {
-                                    select: {
-                                        name_en: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
-                },
-                reviews: {
-                    include: {
-                        product: {
-                            select: {
-                                name_en: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
+        await dbConnect();
+        const customer = await User.findById(id).lean();
 
-        if (!customer) {
-            return null;
-        }
+        if (!customer) return null;
 
-        // Calculate statistics
-        const totalOrders = customer.orders.length;
-        const totalSpent = customer.orders
-            .filter(order => order.status !== 'CANCELLED')
-            .reduce((sum, order) => sum + Number(order.total), 0);
+        // Fetch Orders
+        const { Order } = await import('@/lib/models/Order');
+        const orders = await Order.find({ userId: id }).sort({ createdAt: -1 }).lean();
+
+        // Fetch Reviews (Optional, if we have Review model)
+        const { Review } = await import('@/lib/models/Product');
+        const reviews = await Review.find({ userId: id }).populate('productId', 'name_en').lean();
+
+        // Calculate stats
+        const totalOrders = orders.length;
+        const validOrders = orders.filter((o: any) => o.status !== 'CANCELLED');
+        const totalSpent = validOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
         const avgOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
-        const lastOrder = customer.orders[0] || null;
+        const lastOrder = orders[0] || null;
 
         return {
             ...customer,
-            orders: customer.orders.map(order => ({
+            id: customer._id.toString(),
+            addresses: customer.addresses || [], // Embedded in User
+            orders: orders.map((order: any) => ({
                 ...order,
+                id: order._id.toString(),
                 subtotal: Number(order.subtotal),
                 tax: Number(order.tax),
                 shippingCost: Number(order.shippingCost),
                 total: Number(order.total),
-                items: order.items.map(item => ({
-                    ...item,
-                    price: Number(item.price),
-                })),
+                items: order.items || []
+            })),
+            reviews: reviews.map((r: any) => ({
+                ...r,
+                id: r._id.toString(),
+                product: r.productId // Populated
             })),
             stats: {
                 totalOrders,
@@ -188,31 +173,25 @@ export async function getCustomerById(id: string) {
 // Get customer statistics
 export async function getCustomerStats() {
     try {
-        const [totalCustomers, newThisMonth, withOrders] = await Promise.all([
-            prisma.user.count({ where: { role: 'USER' } }),
-            prisma.user.count({
-                where: {
-                    role: 'USER',
-                    createdAt: {
-                        gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-                    },
-                },
-            }),
-            prisma.user.count({
-                where: {
-                    role: 'USER',
-                    orders: {
-                        some: {},
-                    },
-                },
-            }),
+        await dbConnect();
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+        const startOfMonth = new Date(currentYear, currentMonth, 1);
+
+        const [totalCustomers, newThisMonth] = await Promise.all([
+            User.countDocuments({ role: 'USER' }),
+            User.countDocuments({ role: 'USER', createdAt: { $gte: startOfMonth } })
         ]);
+
+        const { Order } = await import('@/lib/models/Order');
+        const userIds = await Order.distinct('userId');
+        const withOrdersCount = userIds.length; // Approximate, as some might be defaults or guests if allowed
 
         return {
             totalCustomers,
             newThisMonth,
-            withOrders,
-            withoutOrders: totalCustomers - withOrders,
+            withOrders: withOrdersCount,
+            withoutOrders: Math.max(0, totalCustomers - withOrdersCount),
         };
     } catch (error) {
         console.error('Error fetching customer stats:', error);

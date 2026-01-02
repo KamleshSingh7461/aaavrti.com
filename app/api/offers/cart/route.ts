@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Product } from '@/lib/models/Product';
+import { Offer } from '@/lib/models/Marketing';
 
 export async function POST(request: NextRequest) {
     try {
@@ -9,37 +11,35 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ offers: [] });
         }
 
-        // Get categories for these products
-        const products = await prisma.product.findMany({
-            where: { id: { in: productIds } },
-            select: { categoryId: true }
-        });
+        await dbConnect();
 
-        const categoryIds = [...new Set(products.map(p => p.categoryId))];
+        // Get categories for these products
+        const products = await Product.find({ _id: { $in: productIds } })
+            .select('categoryId')
+            .lean();
+
+        const categoryIds = [...new Set(products.map((p: any) => p.categoryId))];
 
         // Fetch active offers
         const now = new Date();
-        const offers = await prisma.offer.findMany({
-            where: {
-                isActive: true,
-                OR: [
-                    { startDate: null },
-                    { startDate: { lte: now } }
-                ],
-                AND: [
-                    {
-                        OR: [
-                            { endDate: null },
-                            { endDate: { gte: now } }
-                        ]
-                    }
-                ]
-            },
-            orderBy: { value: 'desc' }
-        });
+        const offers = await Offer.find({
+            isActive: true,
+            $or: [
+                { startDate: null },
+                { startDate: { $lte: now } }
+            ],
+            $and: [
+                {
+                    $or: [
+                        { endDate: null },
+                        { endDate: { $gte: now } }
+                    ]
+                }
+            ]
+        }).sort({ value: -1 });
 
         // Filter offers applicable to cart items
-        const applicableOffers = offers.filter(offer => {
+        const applicableOffers = offers.filter((offer: any) => {
             // Check usage limit
             if (offer.usageLimit && offer.usedCount >= offer.usageLimit) {
                 return false;
@@ -63,9 +63,8 @@ export async function POST(request: NextRequest) {
             return false;
         });
 
-        // Convert Decimal to number for serialization
-        const serializedOffers = applicableOffers.map(offer => ({
-            id: offer.id,
+        const serializedOffers = applicableOffers.map((offer: any) => ({
+            id: offer._id.toString(),
             code: offer.code,
             type: offer.type,
             value: Number(offer.value),

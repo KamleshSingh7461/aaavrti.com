@@ -1,9 +1,0 @@
-
-    Check for Product ID: f77c9fd3-6e3a-444d-a764-ed68184b565b
-    ---------------------------
-    Direct DB Result: FOUND
-    Category Status: FOUND (Footwear)
-    
-    Attributes Raw: {"color":"Green","fabric":"Cotton Silk","size":["S","M","L","XL"]}
-    Variants Raw: [{"id":"v-0","name":"S","price":3299,"stock":15,"sku":"footwear-green-802-S","attributes":{"size":"S","color":"Green"}},{"id":"v-1","name":"M","price":3299,"stock":15,"sku":"footwear-green-802-M","attributes":{"size":"M","color":"Green"}},{"id":"v-2","name":"L","price":3299,"stock":15,"sku":"footwear-green-802-L","attributes":{"size":"L","color":"Green"}},{"id":"v-3","name":"XL","price":3299,"stock":15,"sku":"footwear-green-802-XL","attributes":{"size":"XL","color":"Green"}}]
-    

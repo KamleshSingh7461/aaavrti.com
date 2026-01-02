@@ -31,7 +31,9 @@ export function CategoryNav({ categories }: NavProps) {
                             href={`/category/${category.slug}`}
                             className={cn("flex items-center text-sm font-light text-foreground/80 hover:text-primary transition-colors py-2 uppercase tracking-widest", cormorant.className)}
                         >
-                            {t({ en: category.name_en, hi: category.name_hi })}
+                            <span suppressHydrationWarning>
+                                {t({ en: category.name_en, hi: category.name_hi })}
+                            </span>
                             {category.children.length > 0 && (
                                 <ChevronDown className="ml-1 h-3 w-3 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-y-0.5" />
                             )}
@@ -48,7 +50,9 @@ export function CategoryNav({ categories }: NavProps) {
                                                 href={`/category/${category.slug}/${child.slug}`}
                                                 className={cn("block px-6 py-2.5 text-sm text-foreground/70 hover:text-primary hover:bg-secondary/30 transition-colors", cormorant.className)}
                                             >
-                                                {t({ en: child.name_en, hi: child.name_hi })}
+                                                <span suppressHydrationWarning>
+                                                    {t({ en: child.name_en, hi: child.name_hi })}
+                                                </span>
                                             </Link>
                                         ))}
                                     </div>
@@ -77,7 +81,9 @@ export function CategoryNav({ categories }: NavProps) {
                                 className={cn("block font-light text-xl text-primary", cormorant.className)}
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
-                                {t({ en: category.name_en, hi: category.name_hi })}
+                                <span suppressHydrationWarning>
+                                    {t({ en: category.name_en, hi: category.name_hi })}
+                                </span>
                             </Link>
                             {category.children.length > 0 && (
                                 <div className="pl-4 border-l border-border/30 space-y-2">
@@ -88,7 +94,9 @@ export function CategoryNav({ categories }: NavProps) {
                                             className="block text-sm text-muted-foreground hover:text-foreground transition-colors"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            {t({ en: child.name_en, hi: child.name_hi })}
+                                            <span suppressHydrationWarning>
+                                                {t({ en: child.name_en, hi: child.name_hi })}
+                                            </span>
                                         </Link>
                                     ))}
                                 </div>

@@ -1,6 +1,7 @@
 
 import { auth } from '@/auth';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Order, ReturnRequest } from '@/lib/models/Order';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,19 +13,20 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const order = await prisma.order.findFirst({
-        where: {
-            OR: [
-                { id },
-                { orderNumber: id }
-            ]
-        },
-        include: {
-            items: { include: { product: true } },
-            shippingAddress: true,
-            returnRequests: { orderBy: { createdAt: 'desc' } }
-        }
-    });
+    await dbConnect();
+
+    // Find Order by ID or Order Number
+    const order = await Order.findOne({
+        $or: [
+            { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }, // Check valid objectId
+            { orderNumber: id }
+        ]
+    })
+        .populate({
+            path: 'items.product',
+            select: 'name_en images price'
+        })
+        .lean();
 
     if (!order) {
         return (
@@ -41,26 +43,33 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             <div className="p-12 text-center">
                 <div className="text-xl">Access Denied</div>
                 <p className="text-muted-foreground text-sm">This order belongs to another user.</p>
-                {/* Debug: {session.user.id} vs {order.userId} */}
             </div>
         );
     }
+
+    // Fetch Return Requests separately since they are likely in separate collection (ref: ReturnRequest model)
+    // Or if ReturnRequest was embedded? `marketing-actions` refactor suggested ReturnRequest is separate model.
+    // In `Marketing.ts`? Or `Order.ts`? I used `ReturnRequest` in `return-actions.ts`.
+    // Let's assume separate model.
+    const returnRequests = await ReturnRequest.find({ orderId: order._id }).sort({ createdAt: -1 }).lean();
 
     // Determine if eligible for Return or Cancel
     // Returns: Only DELIVERED orders within 3 days
     const isDelivered = order.status === 'DELIVERED';
     const deliveryDate = order.updatedAt;
-    const daysSinceDelivery = Math.floor((Date.now() - deliveryDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceDelivery = Math.floor((Date.now() - new Date(deliveryDate).getTime()) / (1000 * 60 * 60 * 24));
     const withinReturnWindow = daysSinceDelivery <= 3;
-    const noExistingReturn = order.returnRequests.length === 0;
+    const noExistingReturn = returnRequests.length === 0;
     const canReturn = isDelivered && withinReturnWindow && noExistingReturn;
 
     // Cancellations: Only CONFIRMED orders on the same day (before pickup next day)
     const isConfirmed = order.status === 'CONFIRMED';
     const orderDate = order.createdAt;
-    const hoursSinceOrder = Math.floor((Date.now() - orderDate.getTime()) / (1000 * 60 * 60));
+    const hoursSinceOrder = Math.floor((Date.now() - new Date(orderDate).getTime()) / (1000 * 60 * 60));
     const sameDay = hoursSinceOrder < 24;
     const canCancel = isConfirmed && sameDay;
+
+    const orderId = order._id.toString();
 
     return (
         <div className="container mx-auto px-4 py-12 mb-20">
@@ -87,7 +96,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                     <div className="text-right">
                         <button
                             className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition-colors"
-                            onClick={() => alert('Cancel order functionality - to be implemented')}
+                        // onClick={() => alert('Cancel order functionality - to be implemented')} // Client actions need hydration
                         >
                             <RotateCcw className="h-4 w-4" />
                             Cancel Order
@@ -101,7 +110,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                 {canReturn && (
                     <div className="text-right">
                         <Link
-                            href={`/account/orders/${order.id}/return`}
+                            href={`/account/orders/${orderId}/return`}
                             className="bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition-colors"
                         >
                             <RotateCcw className="h-4 w-4" />
@@ -126,19 +135,21 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                     <div className="bg-card border border-border rounded-xl overflow-hidden">
                         <div className="p-4 border-b border-border bg-secondary/10 font-medium">Items</div>
                         <div className="divide-y divide-border">
-                            {order.items.map((item) => {
-                                const images = JSON.parse(item.product.images || '[]');
+                            {order.items.map((item: any, index: number) => {
+                                // Product might not be populated correctly if deleted?
+                                const product = item.product || {};
+                                const images = product.images ? JSON.parse(product.images || '[]') : [];
+
                                 return (
-                                    <div key={item.id} className="p-4 flex gap-4">
+                                    <div key={item._id ? item._id.toString() : index} className="p-4 flex gap-4">
                                         <div className="h-20 w-16 bg-secondary/10 rounded-md relative flex-shrink-0 overflow-hidden">
-                                            {images[0] && <Image src={images[0]} alt={item.product.name_en} fill className="object-cover" />}
+                                            {images[0] && <Image src={images[0]} alt={product.name_en || 'Product'} fill className="object-cover" />}
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-medium">{item.product.name_en}</h3>
+                                            <h3 className="font-medium">{product.name_en || 'Unknown Product'}</h3>
                                             <div className="text-sm text-muted-foreground mt-1">
                                                 Qty: {item.quantity} × ₹{Number(item.price).toLocaleString('en-IN')}
                                             </div>
-                                            {/* Show attributes later */}
                                         </div>
                                         <div className="text-right font-medium">
                                             ₹{(Number(item.price) * item.quantity).toLocaleString('en-IN')}
@@ -149,11 +160,11 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                         </div>
                     </div>
 
-                    {order.returnRequests.length > 0 && (
+                    {returnRequests.length > 0 && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                             <h3 className="font-medium text-amber-800 mb-2">Return Requests</h3>
-                            {order.returnRequests.map(req => (
-                                <div key={req.id} className="text-sm text-amber-900 border-t border-amber-200 pt-2 mt-2 first:mt-0 first:border-0 first:pt-0">
+                            {returnRequests.map((req: any) => (
+                                <div key={req._id.toString()} className="text-sm text-amber-900 border-t border-amber-200 pt-2 mt-2 first:mt-0 first:border-0 first:pt-0">
                                     <div className="flex justify-between">
                                         <span>Status: <strong>{req.status}</strong></span>
                                         <span>{new Date(req.createdAt).toLocaleDateString()}</span>

@@ -1,50 +1,86 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Category } from '@/lib/models/Product';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import mongoose from 'mongoose';
 
-// Get all categories with product counts
+import { serialize } from '@/lib/serialize';
+
 export async function getCategories() {
     try {
-        const categories = await prisma.category.findMany({
-            include: {
-                _count: {
-                    select: {
-                        products: true,
-                        children: true,
-                    },
-                },
-                parent: {
-                    select: {
-                        id: true,
-                        name_en: true,
-                    },
-                },
+        await dbConnect();
+
+        // Use aggregation to get counts
+        // $lookup to get children count and product count
+        const categories = await Category.aggregate([
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: 'categoryId',
+                    as: 'products'
+                }
             },
-            orderBy: [
-                { sortOrder: 'asc' },
-                { createdAt: 'asc' }
-            ],
-        });
-        return categories;
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: '_id',
+                    foreignField: 'parentId',
+                    as: 'children'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'parentId',
+                    foreignField: '_id',
+                    as: 'parent'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$parent',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    '_count.products': { $size: '$products' },
+                    '_count.children': { $size: '$children' }
+                    // Note: products and children arrays are now heavy, project them out
+                }
+            },
+            {
+                $project: {
+                    products: 0,
+                    children: 0
+                }
+            },
+            {
+                $sort: { sortOrder: 1, createdAt: 1 }
+            }
+        ]);
+
+        return serialize(categories);
+
     } catch (error) {
         console.error('Error fetching categories:', error);
         return [];
     }
 }
 
-// Reorder categories
 export async function reorderCategories(items: { id: string; sortOrder: number }[]) {
     try {
-        const transaction = items.map((item) =>
-            prisma.category.update({
-                where: { id: item.id },
-                data: { sortOrder: item.sortOrder },
-            })
-        );
+        await dbConnect();
+        const bulkOps = items.map((item) => ({
+            updateOne: {
+                filter: { _id: item.id },
+                update: { sortOrder: item.sortOrder }
+            }
+        }));
 
-        await prisma.$transaction(transaction);
+        await Category.bulkWrite(bulkOps);
         revalidatePath('/categories');
         return { success: true };
     } catch (error) {
@@ -53,30 +89,60 @@ export async function reorderCategories(items: { id: string; sortOrder: number }
     }
 }
 
-// Get single category by ID
 export async function getCategoryById(id: string) {
     try {
-        const category = await prisma.category.findUnique({
-            where: { id },
-            include: {
-                _count: {
-                    select: {
-                        products: true,
-                        children: true,
-                    },
-                },
-                parent: true,
-                children: true,
+        await dbConnect();
+        // Just use findById and separate counts if needed, but aggregation is consistent
+        const categories = await Category.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(id) } },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: 'categoryId',
+                    as: 'products'
+                }
             },
-        });
-        return category;
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: '_id',
+                    foreignField: 'parentId',
+                    as: 'childrenList' // Renamed to avoid confusion with count
+                }
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'parentId',
+                    foreignField: '_id',
+                    as: 'parent'
+                }
+            },
+            { $unwind: { path: '$parent', preserveNullAndEmptyArrays: true } },
+            {
+                $addFields: {
+                    '_count.products': { $size: '$products' },
+                    '_count.children': { $size: '$childrenList' }
+                    // Keep childrenList for response if needed? Prisma code included `children: true`
+                }
+            },
+            {
+                $project: {
+                    products: 0
+                }
+            }
+        ]);
+
+        if (!categories.length) return null;
+
+        return serialize(categories[0]);
     } catch (error) {
         console.error('Error fetching category:', error);
         return null;
     }
 }
 
-// Create new category
 export async function createCategory(formData: FormData) {
     const name_en = formData.get('name_en') as string;
     const name_hi = formData.get('name_hi') as string;
@@ -89,23 +155,20 @@ export async function createCategory(formData: FormData) {
     }
 
     try {
+        await dbConnect();
         // Check if slug already exists
-        const existing = await prisma.category.findUnique({
-            where: { slug },
-        });
+        const existing = await Category.findOne({ slug });
 
         if (existing) {
             return { error: 'Slug already exists' };
         }
 
-        await prisma.category.create({
-            data: {
-                name_en,
-                name_hi: name_hi || null,
-                slug,
-                image: image || null,
-                parentId: parentId || null,
-            },
+        await Category.create({
+            name_en,
+            name_hi: name_hi || null,
+            slug,
+            image: image || null,
+            parentId: parentId || null,
         });
 
         revalidatePath('/categories');
@@ -116,7 +179,6 @@ export async function createCategory(formData: FormData) {
     }
 }
 
-// Update category
 export async function updateCategory(id: string, formData: FormData) {
     const name_en = formData.get('name_en') as string;
     const name_hi = formData.get('name_hi') as string;
@@ -129,12 +191,11 @@ export async function updateCategory(id: string, formData: FormData) {
     }
 
     try {
+        await dbConnect();
         // Check if slug exists for another category
-        const existing = await prisma.category.findFirst({
-            where: {
-                slug,
-                NOT: { id },
-            },
+        const existing = await Category.findOne({
+            slug,
+            _id: { $ne: id },
         });
 
         if (existing) {
@@ -149,16 +210,12 @@ export async function updateCategory(id: string, formData: FormData) {
             }
         }
 
-        await prisma.category.update({
-            where: { id },
-            data: {
-                name_en,
-                name_hi: name_hi || null,
-                slug,
-                image: image || null,
-                parentId: parentId || null,
-                // Note: sortOrder is primarily updated via reorder drag-and-drop
-            },
+        await Category.findByIdAndUpdate(id, {
+            name_en,
+            name_hi: name_hi || null,
+            slug,
+            image: image || null,
+            parentId: parentId || null,
         });
 
         revalidatePath('/categories');
@@ -169,37 +226,23 @@ export async function updateCategory(id: string, formData: FormData) {
     }
 }
 
-// Delete category
 export async function deleteCategory(id: string) {
     try {
-        // Check if category has products
-        const category = await prisma.category.findUnique({
-            where: { id },
-            include: {
-                _count: {
-                    select: {
-                        products: true,
-                        children: true,
-                    },
-                },
-            },
-        });
+        await dbConnect();
+        // Check if category has products or subcategories
+        // We can check counts
+        const productCount = await mongoose.model('Product').countDocuments({ categoryId: id });
+        const childCount = await Category.countDocuments({ parentId: id });
 
-        if (!category) {
-            return { error: 'Category not found' };
+        if (productCount > 0) {
+            return { error: `Cannot delete category with ${productCount} products` };
         }
 
-        if (category._count.products > 0) {
-            return { error: `Cannot delete category with ${category._count.products} products` };
+        if (childCount > 0) {
+            return { error: `Cannot delete category with ${childCount} sub-categories` };
         }
 
-        if (category._count.children > 0) {
-            return { error: `Cannot delete category with ${category._count.children} sub-categories` };
-        }
-
-        await prisma.category.delete({
-            where: { id },
-        });
+        await Category.findByIdAndDelete(id);
 
         revalidatePath('/categories');
         return { success: true };
@@ -215,26 +258,26 @@ async function checkCircularReference(categoryId: string, parentId: string): Pro
     const visited = new Set<string>();
 
     while (currentId) {
-        if (currentId === categoryId) {
-            return true; // Circular reference detected
+        // In Mongoose, ids are objects, need strings for set
+        const currentIdStr = currentId.toString();
+
+        if (currentIdStr === categoryId) {
+            return true;
         }
 
-        if (visited.has(currentId)) {
-            return false; // Already checked this path
+        if (visited.has(currentIdStr)) {
+            return false;
         }
 
-        visited.add(currentId);
+        visited.add(currentIdStr);
 
-        const parent = await prisma.category.findUnique({
-            where: { id: currentId },
-            select: { parentId: true },
-        });
+        const parent = await Category.findById(currentId).select('parentId').lean();
 
         if (!parent || !parent.parentId) {
             break;
         }
 
-        currentId = parent.parentId;
+        currentId = parent.parentId.toString();
     }
 
     return false;

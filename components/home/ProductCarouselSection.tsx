@@ -11,7 +11,7 @@ import {
 import { ProductCard } from '@/components/product/ProductCard';
 import { Cormorant_Garamond } from 'next/font/google';
 import { cn } from '@/lib/utils';
-import { Product } from '@prisma/client'; // Assuming types are generated
+import { Product } from '@/lib/types';
 
 const cormorant = Cormorant_Garamond({
     subsets: ['latin'],

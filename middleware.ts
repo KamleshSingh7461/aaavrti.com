@@ -1,23 +1,22 @@
-
+import NextAuth from 'next-auth';
+import { authConfig } from './auth.config';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { auth } from '@/auth';
 
-export async function middleware(request: NextRequest) {
-    const session = await auth();
-    const path = request.nextUrl.pathname;
+const { auth } = NextAuth(authConfig);
 
-    const isLoggedIn = !!session?.user;
-    const userRole = (session?.user as any)?.role;
+export default auth((req) => {
+    const isLoggedIn = !!req.auth;
+    const userRole = (req.auth?.user as any)?.role;
+    const path = req.nextUrl.pathname;
 
     // 1. Auth Pages (Login/Register)
     // If already logged in, redirect away
     if (path.startsWith('/auth') || path.startsWith('/admin-portal/login')) {
         if (isLoggedIn) {
             if (userRole === 'ADMIN') {
-                return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+                return NextResponse.redirect(new URL('/admin/dashboard', req.nextUrl));
             } else {
-                return NextResponse.redirect(new URL('/account', request.url));
+                return NextResponse.redirect(new URL('/account', req.nextUrl));
             }
         }
         return NextResponse.next();
@@ -27,7 +26,7 @@ export async function middleware(request: NextRequest) {
     // Protect: Must be Logged In + Must be ADMIN
     if (path.startsWith('/admin')) {
         if (!isLoggedIn) {
-            const loginUrl = new URL('/auth/login', request.url);
+            const loginUrl = new URL('/auth/login', req.nextUrl);
             loginUrl.searchParams.set('callbackUrl', path);
             return NextResponse.redirect(loginUrl);
         }
@@ -35,7 +34,7 @@ export async function middleware(request: NextRequest) {
         if (userRole !== 'ADMIN') {
             // Authorized (Logged in) but Forbidden (Wrong Role)
             // Redirect to Home or specialized 403 page
-            return NextResponse.redirect(new URL('/', request.url));
+            return NextResponse.redirect(new URL('/', req.nextUrl));
         }
     }
 
@@ -43,14 +42,14 @@ export async function middleware(request: NextRequest) {
     // Protect: Must be Logged In
     if (path.startsWith('/account') || path.startsWith('/checkout')) {
         if (!isLoggedIn) {
-            const loginUrl = new URL('/auth/login', request.url);
+            const loginUrl = new URL('/auth/login', req.nextUrl);
             loginUrl.searchParams.set('callbackUrl', path);
             return NextResponse.redirect(loginUrl);
         }
     }
 
     return NextResponse.next();
-}
+});
 
 export const config = {
     matcher: [

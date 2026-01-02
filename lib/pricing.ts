@@ -1,6 +1,4 @@
 
-import { Decimal } from '@prisma/client/runtime/library';
-
 export interface CartItemType {
     price: number;
     quantity: number;
@@ -66,7 +64,7 @@ export function calculatePricing(
     // Or just Keep it simple with float for now, but usually for DB we want 2 decimal precision.
     // For now we will calculate per-unit discount.
 
-    let distributedDiscount = 0;
+    let distributedDiscount = 0; // Keeping for logic if needed later
 
     const itemsWithDiscount = items.map((item, index) => {
         const itemTotal = item.price * item.quantity;

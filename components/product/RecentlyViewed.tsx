@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { syncViewHistory, getViewHistory } from '@/actions/history-actions';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { useSession } from 'next-auth/react'; // Need client session to check auth
+import { useSession } from 'next-auth/react';
 import { FadeIn } from '@/components/ui/motion';
+import { getProducts } from '@/actions/get-products';
 
 interface RecentlyViewedProps {
     currentProductId?: string;
@@ -26,44 +27,57 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
 
             // 2. Fetch history depending on Auth state
             if (session?.user) {
-                // If Logged In:
-                // Sync Local -> DB first
+                // If Logged In: Sync & Fetch DB
                 const localHistory = JSON.parse(localStorage.getItem('viewed_products') || '[]');
                 if (localHistory.length > 0) {
                     await syncViewHistory(localHistory);
-                    // Optional: Clear local after sync? Or keep as backup? 
-                    // Usually keep linked. But to prevent re-syncing constantly we could clear?
-                    // No, "guest to user" flow implies we sync once or merge.
-                    // The server side upserts so it's safe to call.
                 }
-
-                // Then Fetch DB History (Single Source of Truth)
                 const dbHistory = await getViewHistory();
                 setProducts(dbHistory);
             } else {
-                // If Guest:
-                // We only have IDs in localStorage. We need to fetch product details.
-                // We can use a special server action to "getProductsByIds" or just use client side fetch?
-                // Creating a public fetcher is safer.
-                // For now, let's implement a quick "getProductsByIds" action or rely on what we have.
+                // If Guest: Fetch details using LocalStorage IDs
+                const localHistory = JSON.parse(localStorage.getItem('viewed_products') || '[]');
+                console.log("RecentlyViewed: Found guest history IDs:", localHistory);
+                if (localHistory.length > 0) {
+                    try {
+                        console.log("RecentlyViewed: Fetching for IDs:", localHistory);
+                        const fetchedProducts = await getProducts({ ids: localHistory });
+                        console.log("RecentlyViewed: Fetched products count:", fetchedProducts.length);
+
+                        if (fetchedProducts.length === 0) {
+                            console.warn("RecentlyViewed: IDs exist but no products returned. IDs might be invalid or deleted.");
+                        }
+
+                        // Re-order to match history order (as $in doesn't guarantee order)
+                        const orderedProducts = localHistory
+                            .map((id: string) => fetchedProducts.find((p: any) => p.id === id))
+                            .filter(Boolean);
+
+                        console.log("RecentlyViewed: Final ordered count:", orderedProducts.length);
+                        setProducts(orderedProducts);
+                    } catch (error) {
+                        console.error("Failed to fetch guest history products", error);
+                    }
+                }
             }
             setLoading(false);
         };
 
         initHistory();
     }, [currentProductId, session]);
-    // Effect dependency: runs when productId changes or session loads.
 
-    // Note: Guest fetching logic is missing in the simplified version above.
-    // If we want Guest history to visually appear, we need `getProductsByIds`.
-    // I entered code for Auth flow mostly.
-
-    if (loading || products.length === 0) return null;
+    if (loading || products.length === 0) {
+        console.log("RecentlyViewed: Loading or empty.", { loading, count: products.length });
+        return null;
+    }
 
     // Filter out current product from display
     const filteredProducts = products.filter(p => p.id !== currentProductId).slice(0, 4);
 
-    if (filteredProducts.length === 0) return null;
+    if (filteredProducts.length === 0) {
+        console.log("RecentlyViewed: Filtered list empty.");
+        return null;
+    }
 
     return (
         <FadeIn className="space-y-8 border-t border-border/50 pt-12 mt-12 mb-12">

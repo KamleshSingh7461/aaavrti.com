@@ -13,7 +13,7 @@ interface CartStore {
     discountAmount: number; // Absolute amount
     couponCode: string | null;
 
-    addItem: (product: Product) => void;
+    addItem: (product: Product & { productId?: string }) => void;
     removeItem: (productId: string) => void;
     updateQuantity: (productId: string, quantity: number) => void;
     clearCart: () => void;

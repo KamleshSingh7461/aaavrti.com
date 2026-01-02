@@ -15,17 +15,41 @@ const cormorant = Cormorant_Garamond({
 
 interface ProductCardProps {
     product: Product;
+    selectedColor?: string;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, selectedColor }: ProductCardProps) {
     const { t } = useLanguage();
+
+    // Robust Image Parsing
+    let images: string[] = [];
+    try {
+        if (Array.isArray(product.images)) {
+            images = product.images;
+        } else if (typeof (product.images as any) === 'string') {
+            // Check if it's a JSON string
+            if ((product.images as any).startsWith('[')) {
+                images = JSON.parse(product.images as any);
+            } else {
+                images = [product.images as any];
+            }
+        }
+        // Normalize: Ensure all items are strings (if JSON parsed to generic object?)
+        images = images.map(i => String(i));
+    } catch (e) {
+        images = ['/placeholder.jpg'];
+    }
+
+    // Ensure at least one image
+    const validImage = (images[0] && images[0].length > 4) ? images[0] : '/placeholder.jpg';
+    const secondaryImage = (images[1] && images[1].length > 4) ? images[1] : null;
 
     return (
         <Link href={`/product/${product.id}`} className="group block space-y-4">
             {/* Image Container - Dominates */}
             <div className="relative aspect-[3/4] overflow-hidden bg-secondary/10">
                 <Image
-                    src={product.images[0]}
+                    src={validImage}
                     alt={product.name_en}
                     fill
                     className="object-cover transition-all duration-700 group-hover:scale-105"
@@ -33,9 +57,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 />
 
                 {/* Secondary Image on Hover */}
-                {product.images[1] && (
+                {images[1] && images[1].length > 4 && (
                     <Image
-                        src={product.images[1]}
+                        src={images[1]}
                         alt={product.name_en}
                         fill
                         className="object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 absolute inset-0"

@@ -2,35 +2,45 @@
 'use server';
 
 import { auth } from '@/auth';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Order } from '@/lib/models/Order';
+import { User } from '@/lib/models/User';
+import { revalidatePath } from 'next/cache';
 
-export async function getUserOrders() {
+export interface DashboardOrder {
+    id: string;
+    displayId: string;
+    date: string;
+    status: string;
+    total: number;
+    items: {
+        name: string;
+        quantity: number;
+        price: number;
+        image: string;
+        slug: string;
+    }[];
+    trackingId: string | null;
+}
+
+export async function getUserOrders(): Promise<DashboardOrder[]> {
     const session = await auth();
     if (!session?.user?.id) return [];
 
     try {
-        const orders = await prisma.order.findMany({
-            where: { userId: session.user.id },
-            include: {
-                items: {
-                    include: {
-                        product: {
-                            select: {
-                                name_en: true,
-                                images: true,
-                                slug: true
-                            }
-                        }
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        });
+        await dbConnect();
+        const orders = await Order.find({ userId: session.user.id })
+            .populate({
+                path: 'items.productId',
+                select: 'name_en images slug'
+            })
+            .sort({ createdAt: -1 })
+            .lean();
 
         // Format for frontend
-        return orders.map(order => ({
-            id: order.id,
-            displayId: order.orderNumber ? `#${order.orderNumber.slice(-6)}` : `#${order.id.slice(-6)}`,
+        return orders.map((order: any) => ({
+            id: order._id.toString(),
+            displayId: order.orderNumber ? `#${order.orderNumber.slice(-6)}` : `#${order._id.toString().slice(-6)}`,
             date: new Date(order.createdAt).toLocaleDateString('en-IN', {
                 year: 'numeric',
                 month: 'short',
@@ -38,19 +48,36 @@ export async function getUserOrders() {
             }),
             status: order.status,
             total: Number(order.total),
-            items: order.items.map(item => {
+            items: (order.items || []).map((item: any) => {
                 let imageUrl = '/placeholder.png';
+                // Handle different product structures (populated)
+                const product = item.productId;
+                if (!product) {
+                    return {
+                        name: 'Product Deleted',
+                        quantity: item.quantity,
+                        price: Number(item.price),
+                        image: imageUrl,
+                        slug: '#'
+                    };
+                }
+
                 try {
-                    const images = item.product?.images ? JSON.parse(item.product.images) : [];
-                    if (images.length > 0) imageUrl = images[0];
+                    // Check if images is array or string
+                    if (Array.isArray(product.images) && product.images.length > 0) {
+                        imageUrl = product.images[0];
+                    } else if (typeof product.images === 'string') {
+                        const images = JSON.parse(product.images);
+                        if (images.length > 0) imageUrl = images[0];
+                    }
                 } catch (e) { }
 
                 return {
-                    name: item.product?.name_en || 'Product Deleted',
+                    name: product.name_en || 'Unknown Product',
                     quantity: item.quantity,
                     price: Number(item.price),
                     image: imageUrl,
-                    slug: item.product?.slug
+                    slug: product.slug
                 }
             }),
             trackingId: order.shippingData ? (() => { try { return JSON.parse(order.shippingData).trackingId } catch (e) { return null } })() : null
@@ -73,10 +100,8 @@ export async function updateUserProfile(formData: FormData) {
     }
 
     try {
-        await prisma.user.update({
-            where: { id: session.user.id },
-            data: { name }
-        });
+        await dbConnect();
+        await User.findByIdAndUpdate(session.user.id, { name });
 
         // revalidatePath('/account'); // Might not update session immediately
         return { success: true };

@@ -1,66 +1,92 @@
 
-import { PrismaClient } from '@prisma/client';
+import mongoose from 'mongoose';
+import * as dotenv from 'dotenv';
+import path from 'path';
 
-const prisma = new PrismaClient();
+// Load environment variables
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const BANNERS = [
+const MONGODB_URI = process.env.DATABASE_URL?.replace('.net/?', '.net/aaavrti?').replace('.net?', '.net/aaavrti?');
+
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI is not defined in .env');
+    process.exit(1);
+}
+
+// Banner Schema (Inline to avoid importing full project if unnecessary, but keeping same structure)
+const BannerSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    subtitle: String,
+    image: { type: String, required: true },
+    mobileImage: String,
+    link: String,
+    ctaText: String,
+    isActive: { type: Boolean, default: true },
+    sortOrder: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const Banner = mongoose.models.Banner || mongoose.model('Banner', BannerSchema);
+
+// Placeholder images (can be replaced by user later)
+// Using high-quality placeholder URLs or local references if they exist
+const PLACEHOLDERS = [
+    'https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=2070&auto=format&fit=crop', // Wedding/Sari
+    'https://images.unsplash.com/photo-1610030469668-965305c88e56?q=80&w=2070&auto=format&fit=crop', // Fabric/Textile
+    'https://images.unsplash.com/photo-1596747610076-1e67e3355088?q=80&w=2070&auto=format&fit=crop', // Colorful
+];
+
+const BANNERS_DATA = [
     {
-        title: "The Royal Wedding Collection",
-        subtitle: "Handcrafted for your special day",
-        image: "/seed-images/lehenga.png",
-        link: "/category/lehengas",
-        ctaText: "Explore Bridal",
-        sortOrder: 0
-    },
-    {
-        title: "Banarasi Silk Heritage",
-        subtitle: "Weaving traditions since 1950",
-        image: "/seed-images/saree (1).png",
-        link: "/category/sarees",
-        ctaText: "Shop Sarees",
+        title: 'The Royal Wedding Collection',
+        subtitle: 'Handcrafted elegance for your special day',
+        image: PLACEHOLDERS[0],
+        mobileImage: PLACEHOLDERS[0],
+        link: '/category/women/sarees',
+        ctaText: 'Shop Now',
+        isActive: true,
         sortOrder: 1
     },
     {
-        title: "Festive Men's Wear",
-        subtitle: "Elegance for the modern man",
-        image: "/seed-images/sherwani.png",
-        link: "/category/men",
-        ctaText: "View Collection",
+        title: 'Festive Season Arrivals',
+        subtitle: 'Celebrate in style with our new collection',
+        image: PLACEHOLDERS[1],
+        mobileImage: PLACEHOLDERS[1],
+        link: '/new/arrival',
+        ctaText: 'Explore',
+        isActive: true,
         sortOrder: 2
+    },
+    {
+        title: 'Timeless Classics',
+        subtitle: 'Heritage weaves that tell a story',
+        image: PLACEHOLDERS[2],
+        mobileImage: PLACEHOLDERS[2],
+        link: '/category/women',
+        ctaText: 'View Collection',
+        isActive: true,
+        sortOrder: 3
     }
 ];
 
-async function main() {
-    console.log('🌟 Seeding Banners...');
+async function seedBanners() {
+    console.log('🌱 Connecting to MongoDB...');
+    await mongoose.connect(MONGODB_URI!);
+    console.log('✅ Connected');
 
-    // Clear existing
-    await prisma.banner.deleteMany({});
+    console.log('🧹 Clearing existing banners...');
+    await Banner.deleteMany({});
 
-    for (const b of BANNERS) {
-        // Note: Using updated image paths assuming seed-images exist. 
-        // If exact filenames vary, this might need check. 
-        // For now, I'll use a placeholder or known paths from previous steps if I knew them.
-        // I will trust the filenames I saw in assign-random-images.ts output?
-        // Wait, assign-random-images.ts output didn't list filenames specific enough.
-
-        // Let's use robust logic or just generic ones.
-        // Actually, I'll use the 'random-assign' logic or just placeholders for now?
-        // No, I'll try to find real files.
-        await prisma.banner.create({
-            data: {
-                ...b,
-                isActive: true
-            }
-        });
+    console.log('🖼️ Seeding banners...');
+    for (const banner of BANNERS_DATA) {
+        await Banner.create(banner);
+        console.log(`  └─ Created: ${banner.title}`);
     }
 
-    console.log('✅ Banners seeded!');
+    console.log('✅ Banner Seeding Completed!');
+    process.exit(0);
 }
 
-main()
-    .then(async () => { await prisma.$disconnect() })
-    .catch(async (e) => {
-        console.error(e);
-        await prisma.$disconnect();
-        process.exit(1);
-    });
+seedBanners().catch(e => {
+    console.error(e);
+    process.exit(1);
+});

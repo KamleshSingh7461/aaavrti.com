@@ -1,4 +1,8 @@
-import { prisma } from '@/lib/db';
+
+import dbConnect from '@/lib/db';
+import { Offer } from '@/lib/models/Marketing';
+import { Product } from '@/lib/models/Product';
+import { Category } from '@/lib/models/Product';
 import { notFound } from 'next/navigation';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
 import { FadeIn } from '@/components/ui/motion';
@@ -8,61 +12,69 @@ import { Tag, Clock, ChevronRight } from 'lucide-react';
 export default async function OfferDetailPage({ params }: { params: Promise<{ code: string }> }) {
     const { code } = await params;
 
+    await dbConnect();
+
     // Find offer
-    const offer = await prisma.offer.findUnique({
-        where: { code: code.toUpperCase() }
-    });
+    const offer = await Offer.findOne({ code: code.toUpperCase() }).lean();
 
     if (!offer || !offer.isActive) {
         notFound();
     }
 
     // Check if offer is expired
-    if (offer.validUntil && new Date(offer.validUntil) < new Date()) {
+    if (offer.endDate && new Date(offer.endDate) < new Date()) {
         notFound();
     }
 
     // Fetch eligible products
-    let products = [];
+    let products: any[] = [];
 
-    if (offer.targetType === 'ALL') {
-        products = await prisma.product.findMany({
-            include: { category: true },
-            orderBy: { createdAt: 'desc' }
-        });
-    } else if (offer.targetType === 'CATEGORY' && offer.targetId) {
-        products = await prisma.product.findMany({
-            where: { categoryId: offer.targetId },
-            include: { category: true },
-            orderBy: { createdAt: 'desc' }
-        });
-    } else if (offer.targetType === 'PRODUCT' && offer.targetId) {
-        const product = await prisma.product.findUnique({
-            where: { id: offer.targetId },
-            include: { category: true }
-        });
-        if (product) products = [product];
+    if (offer.applicableType === 'ALL') {
+        products = await Product.find({ status: 'ACTIVE' })
+            .populate('category') // assuming ref 'Category' in Product model
+            .sort({ createdAt: -1 })
+            .lean();
+    } else if (offer.applicableType === 'CATEGORY' && offer.applicableIds) {
+        const ids = JSON.parse(offer.applicableIds || '[]');
+        products = await Product.find({ category: { $in: ids }, status: 'ACTIVE' })
+            .populate('category')
+            .sort({ createdAt: -1 })
+            .lean();
+    } else if (offer.applicableType === 'PRODUCT' && offer.applicableIds) {
+        const ids = JSON.parse(offer.applicableIds || '[]');
+        products = await Product.find({ _id: { $in: ids }, status: 'ACTIVE' })
+            .populate('category')
+            .lean();
     }
 
     // Fetch all categories for filter
-    const categories = await prisma.category.findMany({
-        select: {
-            id: true,
-            name_en: true,
-            slug: true
-        },
-        orderBy: {
-            name_en: 'asc'
-        }
-    });
+    const categories = await Category.find()
+        .select('name_en slug')
+        .sort({ name_en: 1 })
+        .lean();
+
+    const serializedProducts = products.map((product: any) => ({
+        ...product,
+        id: product._id.toString(),
+        price: Number(product.price),
+        images: JSON.parse(product.images || '[]'),
+        attributes: JSON.parse(product.attributes || '{}'),
+        variants: product.variants ? JSON.parse(product.variants) : null,
+        category: product.category ? { ...product.category, id: product.category._id.toString() } : null
+    }));
+
+    const serializedCategories = categories.map((c: any) => ({
+        ...c,
+        id: c._id.toString()
+    }));
 
     // Calculate price range
-    const prices = products.map(p => Number(p.price));
+    const prices = serializedProducts.map((p: any) => p.price);
     const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices) / 100) * 100 : 0;
     const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices) / 100) * 100 : 50000;
 
-    const isExpiringSoon = offer.validUntil &&
-        new Date(offer.validUntil).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000;
+    const isExpiringSoon = offer.endDate &&
+        new Date(offer.endDate).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000;
 
     return (
         <div className="container mx-auto px-4 py-8 space-y-8 min-h-[60vh]">
@@ -86,7 +98,7 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ co
                             </span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-serif font-medium">
-                            {offer.name}
+                            {offer.name || offer.code}
                         </h1>
                     </FadeIn>
 
@@ -100,22 +112,22 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ co
 
                     <FadeIn delay={0.2}>
                         <div className="text-5xl font-bold text-primary">
-                            {offer.discountType === 'PERCENTAGE' ? (
-                                <>{offer.discountValue}% OFF</>
+                            {offer.type === 'PERCENTAGE' ? (
+                                <>{Number(offer.value)}% OFF</>
                             ) : (
-                                <>₹{offer.discountValue} OFF</>
+                                <>₹{Number(offer.value)} OFF</>
                             )}
                         </div>
                     </FadeIn>
 
                     {/* Validity & Limits */}
                     <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-                        {offer.validUntil && (
+                        {offer.endDate && (
                             <div className={`flex items-center gap-2 ${isExpiringSoon ? 'text-red-600 font-medium' : 'text-muted-foreground'
                                 }`}>
                                 <Clock className="h-4 w-4" />
                                 <span>
-                                    Valid until {new Date(offer.validUntil).toLocaleDateString('en-IN', {
+                                    Valid until {new Date(offer.endDate).toLocaleDateString('en-IN', {
                                         day: 'numeric',
                                         month: 'long',
                                         year: 'numeric'
@@ -123,9 +135,9 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ co
                                 </span>
                             </div>
                         )}
-                        {offer.minPurchase && (
+                        {offer.minAmount && (
                             <span className="text-muted-foreground">
-                                Min. purchase: ₹{offer.minPurchase.toLocaleString('en-IN')}
+                                Min. purchase: ₹{Number(offer.minAmount).toLocaleString('en-IN')}
                             </span>
                         )}
                         {offer.usageLimit && (
@@ -145,8 +157,8 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ co
 
                 {products.length > 0 ? (
                     <ProductBrowser
-                        initialProducts={products}
-                        categories={categories}
+                        initialProducts={serializedProducts}
+                        categories={serializedCategories}
                         minPrice={minPrice}
                         maxPrice={maxPrice}
                     />

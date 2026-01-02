@@ -1,7 +1,9 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Attribute } from '@/lib/models/Product';
 import { revalidatePath } from 'next/cache';
+import mongoose from 'mongoose';
 
 export interface AttributeWithValues {
     id: string;
@@ -11,54 +13,56 @@ export interface AttributeWithValues {
         id: string;
         name: string;
         value: string;
-        createdAt: Date;
     }[];
-    createdAt: Date;
 }
 
 // Get all attributes with their values
 export async function getAttributes() {
     try {
-        const attributes = await prisma.attribute.findMany({
-            include: {
-                values: {
-                    orderBy: {
-                        createdAt: 'asc',
-                    },
-                },
-            },
-            orderBy: {
-                name: 'asc',
-            },
-        });
-        return attributes as AttributeWithValues[];
+        await dbConnect();
+        const attributes = await Attribute.find()
+            .sort({ name: 1 })
+            .lean();
+
+        return attributes.map((attr: any) => ({
+            id: attr._id.toString(),
+            name: attr.name,
+            type: attr.type,
+            values: (attr.values || []).map((v: any) => ({
+                id: v._id.toString(),
+                name: v.name,
+                value: v.value
+            }))
+        }));
     } catch (error) {
         console.error('Error fetching attributes:', error);
         return [];
     }
 }
 
-// Get attributes by type
 export async function getAttributesByType(type: string) {
     try {
-        const attributes = await prisma.attribute.findMany({
-            where: { type },
-            include: {
-                values: {
-                    orderBy: {
-                        createdAt: 'asc',
-                    },
-                },
-            },
-        });
-        return attributes as AttributeWithValues[];
+        await dbConnect();
+        const attributes = await Attribute.find({ type })
+            .sort({ name: 1 })
+            .lean();
+
+        return attributes.map((attr: any) => ({
+            id: attr._id.toString(),
+            name: attr.name,
+            type: attr.type,
+            values: (attr.values || []).map((v: any) => ({
+                id: v._id.toString(),
+                name: v.name,
+                value: v.value
+            }))
+        }));
     } catch (error) {
         console.error('Error fetching attributes by type:', error);
         return [];
     }
 }
 
-// Create new attribute type
 export async function createAttribute(formData: FormData) {
     const name = formData.get('name') as string;
     const type = formData.get('type') as string;
@@ -68,14 +72,9 @@ export async function createAttribute(formData: FormData) {
     }
 
     try {
-        await prisma.attribute.create({
-            data: {
-                name,
-                type,
-            },
-        });
-
-        revalidatePath('/attributes');
+        await dbConnect();
+        await Attribute.create({ name, type, values: [] });
+        revalidatePath('/admin/attributes');
         return { success: true };
     } catch (error) {
         console.error('Error creating attribute:', error);
@@ -83,7 +82,6 @@ export async function createAttribute(formData: FormData) {
     }
 }
 
-// Create new attribute value
 export async function createAttributeValue(attributeId: string, formData: FormData) {
     const name = formData.get('name') as string;
     const value = formData.get('value') as string;
@@ -93,15 +91,12 @@ export async function createAttributeValue(attributeId: string, formData: FormDa
     }
 
     try {
-        await prisma.attributeValue.create({
-            data: {
-                attributeId,
-                name,
-                value,
-            },
+        await dbConnect();
+        await Attribute.findByIdAndUpdate(attributeId, {
+            $push: { values: { name, value } }
         });
 
-        revalidatePath('/attributes');
+        revalidatePath('/admin/attributes');
         return { success: true };
     } catch (error) {
         console.error('Error creating attribute value:', error);
@@ -109,25 +104,29 @@ export async function createAttributeValue(attributeId: string, formData: FormDa
     }
 }
 
-// Update attribute value
 export async function updateAttributeValue(id: string, formData: FormData) {
+    // ID here implies value ID potentially, OR we need attribute ID too.
+    // Mongoose locator: "values._id": id
+
     const name = formData.get('name') as string;
     const value = formData.get('value') as string;
 
-    if (!name || !value) {
-        return { error: 'Name and value are required' };
-    }
+    if (!name || !value) return { error: 'Name and value are required' };
 
     try {
-        await prisma.attributeValue.update({
-            where: { id },
-            data: {
-                name,
-                value,
-            },
-        });
+        await dbConnect();
+        // Since we only have 'id' (value id), we must find parent attribute
+        await Attribute.findOneAndUpdate(
+            { "values._id": id },
+            {
+                $set: {
+                    "values.$.name": name,
+                    "values.$.value": value
+                }
+            }
+        );
 
-        revalidatePath('/attributes');
+        revalidatePath('/admin/attributes');
         return { success: true };
     } catch (error) {
         console.error('Error updating attribute value:', error);
@@ -135,15 +134,15 @@ export async function updateAttributeValue(id: string, formData: FormData) {
     }
 }
 
-// Delete attribute value
 export async function deleteAttributeValue(id: string) {
     try {
-        // TODO: Check if value is used in any products before deleting
-        await prisma.attributeValue.delete({
-            where: { id },
-        });
+        await dbConnect();
+        await Attribute.findOneAndUpdate(
+            { "values._id": id },
+            { $pull: { values: { _id: id } } }
+        );
 
-        revalidatePath('/attributes');
+        revalidatePath('/admin/attributes');
         return { success: true };
     } catch (error) {
         console.error('Error deleting attribute value:', error);
@@ -151,91 +150,73 @@ export async function deleteAttributeValue(id: string) {
     }
 }
 
-// Initialize default attributes (to be called manually or on first setup)
 export async function initializeDefaultAttributes() {
     try {
-        // Check if attributes already exist
-        const existing = await prisma.attribute.findFirst();
-        if (existing) {
-            return { error: 'Attributes already initialized' };
-        }
+        await dbConnect();
+        console.log('Using debugged initializeDefaultAttributes');
 
-        // Create Color attribute
-        const colorAttr = await prisma.attribute.create({
-            data: {
+        const defaults = [
+            {
                 name: 'Color',
                 type: 'COLOR',
-                values: {
-                    create: [
-                        { name: 'Crimson Red', value: '#DC143C' },
-                        { name: 'Royal Blue', value: '#4169E1' },
-                        { name: 'Emerald Green', value: '#50C878' },
-                        { name: 'Golden', value: '#FFD700' },
-                        { name: 'Ivory', value: '#FFFFF0' },
-                        { name: 'Maroon', value: '#800000' },
-                        { name: 'Navy Blue', value: '#000080' },
-                        { name: 'Pink', value: '#FFC0CB' },
-                        { name: 'Orange', value: '#FFA500' },
-                        { name: 'Black', value: '#000000' },
-                    ],
-                },
+                values: [
+                    { name: 'Crimson Red', value: '#DC143C' },
+                    { name: 'Royal Blue', value: '#4169E1' },
+                    { name: 'Emerald Green', value: '#50C878' },
+                    { name: 'Golden', value: '#FFD700' },
+                    { name: 'Ivory', value: '#FFFFF0' },
+                    { name: 'Maroon', value: '#800000' },
+                    { name: 'Navy Blue', value: '#000080' },
+                    { name: 'Pink', value: '#FFC0CB' },
+                    { name: 'Orange', value: '#FFA500' },
+                    { name: 'Black', value: '#000000' },
+                ]
             },
-        });
-
-        // Create Size attribute
-        const sizeAttr = await prisma.attribute.create({
-            data: {
+            {
                 name: 'Size',
                 type: 'SIZE',
-                values: {
-                    create: [
-                        { name: 'Extra Small (XS)', value: 'XS' },
-                        { name: 'Small (S)', value: 'S' },
-                        { name: 'Medium (M)', value: 'M' },
-                        { name: 'Large (L)', value: 'L' },
-                        { name: 'Extra Large (XL)', value: 'XL' },
-                        { name: 'XXL', value: 'XXL' },
-                        { name: 'Free Size', value: 'Free Size' },
-                    ],
-                },
+                values: [
+                    { name: 'Extra Small (XS)', value: 'XS' },
+                    { name: 'Small (S)', value: 'S' },
+                    { name: 'Medium (M)', value: 'M' },
+                    { name: 'Large (L)', value: 'L' },
+                    { name: 'Extra Large (XL)', value: 'XL' },
+                    { name: 'XXL', value: 'XXL' },
+                    { name: 'Free Size', value: 'Free Size' },
+                ]
             },
-        });
-
-        // Create Material attribute
-        const materialAttr = await prisma.attribute.create({
-            data: {
+            {
                 name: 'Material',
                 type: 'TEXT',
-                values: {
-                    create: [
-                        { name: 'Cotton', value: 'Cotton' },
-                        { name: 'Silk', value: 'Silk' },
-                        { name: 'Georgette', value: 'Georgette' },
-                        { name: 'Chiffon', value: 'Chiffon' },
-                        { name: 'Linen', value: 'Linen' },
-                        { name: 'Velvet', value: 'Velvet' },
-                    ],
-                },
+                values: [
+                    { name: 'Cotton', value: 'Cotton' },
+                    { name: 'Silk', value: 'Silk' },
+                    { name: 'Georgette', value: 'Georgette' },
+                    { name: 'Chiffon', value: 'Chiffon' },
+                    { name: 'Linen', value: 'Linen' },
+                    { name: 'Velvet', value: 'Velvet' },
+                ]
             },
-        });
-
-        // Create Tags attribute for collections
-        const tagsAttr = await prisma.attribute.create({
-            data: {
+            {
                 name: 'Tags',
                 type: 'TEXT',
-                values: {
-                    create: [
-                        { name: 'Wedding Collection', value: 'wedding' },
-                        { name: 'Festive Wear', value: 'festive' },
-                        { name: 'Bestseller', value: 'bestseller' },
-                        { name: 'New Arrival', value: 'new' },
-                    ],
-                },
-            },
-        });
+                values: [
+                    { name: 'Wedding Collection', value: 'wedding' },
+                    { name: 'Festive Wear', value: 'festive' },
+                    { name: 'Bestseller', value: 'bestseller' },
+                    { name: 'New Arrival', value: 'new' },
+                ]
+            }
+        ];
 
-        revalidatePath('/attributes');
+        for (const def of defaults) {
+            const existing = await Attribute.findOne({ name: def.name });
+            if (!existing) {
+                await Attribute.create(def);
+            }
+        }
+
+        revalidatePath('/admin/attributes');
         return { success: true };
     } catch (error) {
         console.error('Error initializing attributes:', error);

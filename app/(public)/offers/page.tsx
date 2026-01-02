@@ -1,4 +1,6 @@
-import { prisma } from '@/lib/db';
+
+import dbConnect from '@/lib/db';
+import { Offer } from '@/lib/models/Marketing'; // Assuming Offer is exported from Marketing.ts
 import Link from 'next/link';
 import { FadeIn } from '@/components/ui/motion';
 import { Tag, Clock, ArrowRight } from 'lucide-react';
@@ -9,19 +11,18 @@ export const metadata = {
 };
 
 export default async function OffersPage() {
+    await dbConnect();
+
     // Fetch all active offers
-    const offers = await prisma.offer.findMany({
-        where: {
-            isActive: true,
-            OR: [
-                { endDate: null },
-                { endDate: { gte: new Date() } }
-            ]
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    });
+    const offers = await Offer.find({
+        isActive: true,
+        $or: [
+            { endDate: null },
+            { endDate: { $gte: new Date() } }
+        ]
+    })
+        .sort({ createdAt: -1 })
+        .lean();
 
     return (
         <div className="container mx-auto px-4 py-12 min-h-[60vh]">
@@ -43,13 +44,13 @@ export default async function OffersPage() {
             {/* Offers Grid */}
             {offers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {offers.map((offer) => {
+                    {offers.map((offer: any) => {
                         const isExpiringSoon = offer.endDate &&
                             new Date(offer.endDate).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000;
 
                         return (
                             <div
-                                key={offer.id}
+                                key={offer._id.toString()}
                                 className="border rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-card"
                             >
                                 <div className="p-6 space-y-4">

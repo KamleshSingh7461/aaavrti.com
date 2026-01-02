@@ -9,6 +9,7 @@ import { LanguageToggle } from '@/components/layout/LanguageToggle';
 import { SearchModal } from '@/components/search/SearchModal';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
+// Force Update
 import Image from 'next/image';
 import { Cormorant_Garamond } from 'next/font/google';
 import { cn } from '@/lib/utils';

@@ -1,7 +1,8 @@
 
 'use server';
 
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Order } from '@/lib/models/Order';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -31,10 +32,12 @@ export async function shipOrder(orderId: string, provider: string = 'Shiprocket'
     // if ((session?.user as any).role !== 'ADMIN') return { error: 'Unauthorized' };
 
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
-            include: { shippingAddress: true, items: { include: { product: true } } }
-        });
+        await dbConnect();
+        // Mongoose: Populate items.product to access product details
+        const order = await Order.findById(orderId)
+            .populate('shippingAddress')
+            .populate({ path: 'items.productId' });
+
         if (!order) return { error: 'Order not found' };
 
         if (order.status !== 'CONFIRMED' && order.status !== 'PROCESSING') {
@@ -83,9 +86,9 @@ export async function shipOrder(orderId: string, provider: string = 'Shiprocket'
                     billing_email: session?.user?.email || "customer@example.com",
                     billing_phone: phone,
                     shipping_is_billing: true,
-                    order_items: order.items.map(item => ({
-                        name: item.product.name_en,
-                        sku: item.product.sku || "SKU-" + item.productId.slice(0, 5),
+                    order_items: order.items.map((item: any) => ({
+                        name: item.productId?.name_en || 'Product',
+                        sku: item.productId?.sku || "SKU-" + item.productId?._id?.toString().slice(0, 5) || "SKU",
                         units: item.quantity,
                         selling_price: Number(item.price),
                         discount: 0,
@@ -199,19 +202,16 @@ export async function shipOrder(orderId: string, provider: string = 'Shiprocket'
         }
 
         // Update Order
-        await prisma.order.update({
-            where: { id: orderId },
-            data: {
-                status: 'SHIPPED',
-                shippingProtocol: provider,
-                shippingData: JSON.stringify({
-                    trackingId,
-                    awbCode,
-                    provider,
-                    shippedAt: new Date().toISOString(),
-                    metadata: shippingMetadata
-                })
-            }
+        await Order.findByIdAndUpdate(orderId, {
+            status: 'SHIPPED',
+            shippingProtocol: provider,
+            shippingData: JSON.stringify({
+                trackingId,
+                awbCode,
+                provider,
+                shippedAt: new Date().toISOString(),
+                metadata: shippingMetadata
+            })
         });
 
         console.log(`[SHIPROCKET] Order ${orderId} shipped successfully with tracking: ${trackingId}`);
@@ -228,10 +228,8 @@ export async function shipOrder(orderId: string, provider: string = 'Shiprocket'
 }
 
 export async function deliverOrder(orderId: string) {
+    await dbConnect();
     // Admin manually marking as Delivered (or Webhook)
-    await prisma.order.update({
-        where: { id: orderId },
-        data: { status: 'DELIVERED' }
-    });
+    await Order.findByIdAndUpdate(orderId, { status: 'DELIVERED' });
     revalidatePath(`/admin/orders/${orderId}`);
 }

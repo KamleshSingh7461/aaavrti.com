@@ -1,89 +1,60 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Product } from '@/lib/models/Product';
 
 export async function getRecommendedProducts(cartItemIds: string[], limit: number = 4) {
     try {
+        await dbConnect();
         // Get categories of items in cart
-        const cartItems = await prisma.product.findMany({
-            where: { id: { in: cartItemIds } },
-            select: { categoryId: true }
-        });
+        const cartItems = await Product.find({ _id: { $in: cartItemIds } }).select('categoryId');
 
         const categoryIds = [...new Set(cartItems.map(item => item.categoryId))];
 
         // Get recommended products from same categories, excluding cart items
-        const recommended = await prisma.product.findMany({
-            where: {
-                categoryId: { in: categoryIds },
-                id: { notIn: cartItemIds }
-            },
-            take: limit,
-            orderBy: [
-                { createdAt: 'desc' }
-            ],
-            select: {
-                id: true,
-                name_en: true,
-                name_hi: true,
-                slug: true,
-                images: true,
-                price: true,
-                category: {
-                    select: {
-                        name_en: true
-                    }
-                }
-            }
-        });
+        let recommended = await Product.find({
+            categoryId: { $in: categoryIds },
+            _id: { $nin: cartItemIds }
+        })
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .populate('categoryId', 'name_en')
+            .lean();
 
         // If not enough products from same category, get popular products
         if (recommended.length < limit) {
-            const additional = await prisma.product.findMany({
-                where: {
-                    id: { notIn: [...cartItemIds, ...recommended.map(p => p.id)] }
-                },
-                take: limit - recommended.length,
-                orderBy: [
-                    { createdAt: 'desc' }
-                ],
-                select: {
-                    id: true,
-                    name_en: true,
-                    name_hi: true,
-                    slug: true,
-                    images: true,
-                    price: true,
-                    category: {
-                        select: {
-                            name_en: true
-                        }
-                    }
-                }
-            });
+            const excludedIds = [...cartItemIds, ...recommended.map((p: any) => p._id.toString())];
+
+            const additional = await Product.find({
+                _id: { $nin: excludedIds }
+            })
+                .limit(limit - recommended.length)
+                .sort({ createdAt: -1 })
+                .populate('categoryId', 'name_en')
+                .lean();
 
             recommended.push(...additional);
         }
 
         // Convert Decimal to number and handle images
-        return recommended.map(product => {
-            // Parse images if it's a string
+        return recommended.map((product: any) => {
+            // Handle images if it's a string (though Schema says array of strings, safety check)
             let images: string[] = [];
-            if (typeof product.images === 'string') {
-                try {
-                    images = JSON.parse(product.images);
-                } catch {
-                    images = [];
-                }
-            } else if (Array.isArray(product.images)) {
+            if (Array.isArray(product.images)) {
                 images = product.images;
             }
 
             return {
-                ...product,
+                id: product._id.toString(),
+                name_en: product.name_en,
+                name_hi: product.name_hi,
+                slug: product.slug,
+                images: images,
                 price: Number(product.price),
+                category: product.categoryId ? {
+                    name_en: product.categoryId.name_en
+                } : null,
                 compareAtPrice: null,
-                images
             };
         });
 

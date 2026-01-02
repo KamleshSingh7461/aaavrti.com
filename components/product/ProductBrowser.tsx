@@ -8,7 +8,7 @@ import { ProductGrid } from './ProductGrid';
 
 interface ProductBrowserProps {
     initialProducts: any[];
-    categories: any[];
+    categories: Array<{ id: string; name_en: string; slug: string; parentId?: string }>;
     minPrice: number;
     maxPrice: number;
     basePath?: string;
@@ -58,7 +58,7 @@ export function ProductBrowser({ initialProducts, categories, minPrice, maxPrice
                     });
                 } catch (e) { }
             }
-            return Array.from(colors);
+            return Array.from(colors).map(c => String(c));
         })
     )).sort();
 

@@ -1,4 +1,7 @@
-import { prisma } from '@/lib/db';
+
+import dbConnect from '@/lib/db';
+import { Banner } from '@/lib/models/Marketing';
+import { Product } from '@/lib/models/Product';
 import { notFound } from 'next/navigation';
 import { FadeIn } from '@/components/ui/motion';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
@@ -7,13 +10,13 @@ import { getCategories } from '@/actions/category-actions';
 export default async function BannerLinkPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
 
+    await dbConnect();
+
     // Find banner by link
-    const banner = await prisma.banner.findFirst({
-        where: {
-            link: `/${slug}`,
-            isActive: true
-        }
-    });
+    const banner = await Banner.findOne({
+        link: `/${slug}`,
+        isActive: true
+    }).lean();
 
     if (!banner) {
         notFound();
@@ -21,32 +24,29 @@ export default async function BannerLinkPage({ params }: { params: Promise<{ slu
 
     // Fetch products based on banner configuration
     // For now, fetch all active products (TODO: specific filtering)
-    const products = await prisma.product.findMany({
-        where: {
-            status: 'ACTIVE'
-        },
-        include: {
-            category: true
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    });
+    const products = await Product.find({
+        status: 'ACTIVE'
+    })
+        .sort({ createdAt: -1 })
+        .populate('category') // Is category a ref? Yes.
+        .lean();
 
     // Fetch categories for filter
     const categories = await getCategories();
 
     // Transform products for client component
-    const serializedProducts = products.map(product => ({
+    const serializedProducts = products.map((product: any) => ({
         ...product,
+        id: product._id.toString(),
         price: Number(product.price),
         images: JSON.parse(product.images || '[]'),
         attributes: JSON.parse(product.attributes || '{}'),
-        variants: product.variants ? JSON.parse(product.variants) : null
+        variants: product.variants ? JSON.parse(product.variants) : null,
+        category: product.category ? { ...product.category, id: product.category._id.toString() } : null
     }));
 
     // Calculate price range
-    const prices = serializedProducts.map(p => p.price);
+    const prices = serializedProducts.map((p: any) => p.price);
     const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices) / 100) * 100 : 0;
     const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices) / 100) * 100 : 50000;
 

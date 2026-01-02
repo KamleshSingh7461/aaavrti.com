@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const AccordionContext = React.createContext<{
-    value?: string;
+    value?: string | string[];
     onValueChange?: (value: string) => void;
 }>({});
 
@@ -14,19 +14,34 @@ interface AccordionProps {
     children: React.ReactNode;
     className?: string;
     type?: 'single' | 'multiple';
-    value?: string;
-    defaultValue?: string;
-    onValueChange?: (value: string) => void;
+    value?: string | string[];
+    defaultValue?: string | string[];
+    onValueChange?: (value: string | string[]) => void;
     collapsible?: boolean;
 }
 
-export function Accordion({ children, className, value: controlledValue, onValueChange, defaultValue }: AccordionProps) {
-    const [value, setValue] = React.useState(defaultValue || '');
+export function Accordion({ children, className, type = 'single', value: controlledValue, onValueChange, defaultValue }: AccordionProps) {
+    const [value, setValue] = React.useState<string | string[]>(defaultValue || (type === 'multiple' ? [] : ''));
 
-    const handleValueChange = (newValue: string) => {
-        const finalValue = newValue === value ? '' : newValue;
-        setValue(finalValue);
-        onValueChange?.(finalValue);
+    const handleValueChange = (itemValue: string) => {
+        if (type === 'multiple') {
+            const currentValues = Array.isArray(controlledValue !== undefined ? controlledValue : value)
+                ? (controlledValue !== undefined ? controlledValue : value) as string[]
+                : [];
+
+            const newValues = currentValues.includes(itemValue)
+                ? currentValues.filter(v => v !== itemValue)
+                : [...currentValues, itemValue];
+
+            setValue(newValues);
+            (onValueChange as any)?.(newValues);
+        } else {
+            // Single mode
+            const currentValue = controlledValue !== undefined ? controlledValue : value;
+            const newValue = currentValue === itemValue ? '' : itemValue;
+            setValue(newValue);
+            (onValueChange as any)?.(newValue);
+        }
     };
 
     return (
@@ -36,28 +51,32 @@ export function Accordion({ children, className, value: controlledValue, onValue
     );
 }
 
+const AccordionItemContext = React.createContext<{ value: string }>({ value: '' });
+
 export function AccordionItem({ children, value, className }: { children: React.ReactNode; value: string; className?: string }) {
     return (
-        <div className={cn("border-b", className)}>
-            {React.Children.map(children, child => {
-                if (React.isValidElement(child)) {
-                    return React.cloneElement(child, { ...child.props, value } as any);
-                }
-                return child;
-            })}
-        </div>
+        <AccordionItemContext.Provider value={{ value }}>
+            <div className={cn("border-b", className)}>
+                {children}
+            </div>
+        </AccordionItemContext.Provider>
     );
 }
 
-export function AccordionTrigger({ children, className, value, ...props }: { children: React.ReactNode; className?: string; value?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function AccordionTrigger({ children, className, ...props }: { children: React.ReactNode; className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
     const { value: selectedValue, onValueChange } = React.useContext(AccordionContext);
-    const isOpen = selectedValue === value;
+    const { value } = React.useContext(AccordionItemContext);
+
+    // Check if open
+    const isOpen = Array.isArray(selectedValue)
+        ? selectedValue.includes(value)
+        : selectedValue === value;
 
     return (
         <h3 className="flex">
             <button
                 type="button"
-                onClick={() => onValueChange?.(value!)}
+                onClick={() => onValueChange?.(value)}
                 className={cn(
                     "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline md:text-sm",
                     className
@@ -76,9 +95,13 @@ export function AccordionTrigger({ children, className, value, ...props }: { chi
     );
 }
 
-export function AccordionContent({ children, className, value, ...props }: { children: React.ReactNode; className?: string; value?: string } & React.HTMLAttributes<HTMLDivElement>) {
+export function AccordionContent({ children, className, ...props }: { children: React.ReactNode; className?: string } & React.HTMLAttributes<HTMLDivElement>) {
     const { value: selectedValue } = React.useContext(AccordionContext);
-    const isOpen = selectedValue === value;
+    const { value } = React.useContext(AccordionItemContext);
+
+    const isOpen = Array.isArray(selectedValue)
+        ? selectedValue.includes(value)
+        : selectedValue === value;
 
     return (
         <AnimatePresence initial={false}>

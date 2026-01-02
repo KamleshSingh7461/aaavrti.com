@@ -1,6 +1,7 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { NewsletterSubscriber } from '@/lib/models/Marketing';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -12,25 +13,20 @@ export async function subscribeNewsletter(email: string) {
     }
 
     try {
-        const existing = await prisma.newsletterSubscriber.findUnique({
-            where: { email }
-        });
+        await dbConnect();
+        const existing = await NewsletterSubscriber.findOne({ email });
 
         if (existing) {
             if (existing.isActive) {
                 return { success: true, message: 'You are already subscribed!' };
             } else {
-                await prisma.newsletterSubscriber.update({
-                    where: { email },
-                    data: { isActive: true }
-                });
+                existing.isActive = true;
+                await existing.save();
                 return { success: true, message: 'Welcome back! Your subscription is active again.' };
             }
         }
 
-        await prisma.newsletterSubscriber.create({
-            data: { email }
-        });
+        await NewsletterSubscriber.create({ email });
 
         revalidatePath('/admin/marketing/newsletter');
         return { success: true, message: 'Thank you for subscribing!' };
@@ -45,22 +41,25 @@ export async function subscribeNewsletter(email: string) {
  */
 export async function getSubscribers(filters?: { search?: string; status?: 'active' | 'inactive' | 'all' }) {
     try {
-        const where: any = {};
+        await dbConnect();
+        const query: any = {};
 
         if (filters?.search) {
-            where.email = { contains: filters.search };
+            query.email = { $regex: filters.search, $options: 'i' };
         }
 
         if (filters?.status && filters.status !== 'all') {
-            where.isActive = filters.status === 'active';
+            query.isActive = filters.status === 'active';
         }
 
-        const subscribers = await prisma.newsletterSubscriber.findMany({
-            where,
-            orderBy: { createdAt: 'desc' }
-        });
+        const subscribers = await NewsletterSubscriber.find(query)
+            .sort({ createdAt: -1 })
+            .lean();
 
-        return subscribers;
+        return subscribers.map((s: any) => ({
+            ...s,
+            id: s._id.toString()
+        }));
     } catch (error) {
         console.error('Error fetching subscribers:', error);
         return [];
@@ -72,13 +71,12 @@ export async function getSubscribers(filters?: { search?: string; status?: 'acti
  */
 export async function toggleSubscriberStatus(id: string) {
     try {
-        const sub = await prisma.newsletterSubscriber.findUnique({ where: { id } });
+        await dbConnect();
+        const sub = await NewsletterSubscriber.findById(id);
         if (!sub) return { error: 'Subscriber not found' };
 
-        await prisma.newsletterSubscriber.update({
-            where: { id },
-            data: { isActive: !sub.isActive }
-        });
+        sub.isActive = !sub.isActive;
+        await sub.save();
 
         revalidatePath('/admin/marketing/newsletter');
         return { success: true };
@@ -93,7 +91,8 @@ export async function toggleSubscriberStatus(id: string) {
  */
 export async function deleteSubscriber(id: string) {
     try {
-        await prisma.newsletterSubscriber.delete({ where: { id } });
+        await dbConnect();
+        await NewsletterSubscriber.findByIdAndDelete(id);
         revalidatePath('/admin/marketing/newsletter');
         return { success: true };
     } catch (error) {
@@ -110,10 +109,11 @@ export async function unsubscribeNewsletter(email: string) {
     }
 
     try {
-        await prisma.newsletterSubscriber.update({
-            where: { email },
-            data: { isActive: false }
-        });
+        await dbConnect();
+        await NewsletterSubscriber.findOneAndUpdate(
+            { email },
+            { isActive: false }
+        );
 
         revalidatePath('/admin/marketing/newsletter');
         return { success: true, message: 'You have been unsubscribed successfully.' };
@@ -128,11 +128,12 @@ export async function unsubscribeNewsletter(email: string) {
  */
 export async function sendNewsletter(subject: string, htmlContent: string) {
     try {
+        // Dynamic import to avoid issues during build if resend not configured
         const { resend } = await import('@/lib/resend');
-        const subscribers = await prisma.newsletterSubscriber.findMany({
-            where: { isActive: true },
-            select: { email: true }
-        });
+        if (!resend) return { error: 'Resend not configured' };
+
+        await dbConnect();
+        const subscribers = await NewsletterSubscriber.find({ isActive: true }).select('email');
 
         if (subscribers.length === 0) {
             return { error: 'No active subscribers found.' };
@@ -142,8 +143,11 @@ export async function sendNewsletter(subject: string, htmlContent: string) {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://aaavrti.com';
 
         // Resend limited to 50 emails in one call for the free tier/some plans
-        // For simplicity, we send one by one or in small batches here.
-        const results = await Promise.all(
+        // We'll send sequentially or batch if needed.
+        // For now, let's try sending to list if Resend supports broadcasting, or iterate.
+        // Sending individually for simplicity in this migration snippet.
+
+        await Promise.all(
             emails.map((email: string) => {
                 const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
 

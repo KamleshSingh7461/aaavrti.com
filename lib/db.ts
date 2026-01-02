@@ -1,25 +1,61 @@
+import mongoose from 'mongoose';
 
-import { PrismaClient } from '@prisma/client';
+const MONGODB_URI = process.env.DATABASE_URL;
 
-const globalForPrisma = globalThis as unknown as {
-    prisma: PrismaClient | undefined;
-};
+if (!MONGODB_URI) {
+  throw new Error(
+    'Please define the DATABASE_URL environment variable inside .env'
+  );
+}
 
-export const prisma =
-    globalForPrisma.prisma ??
-    new PrismaClient({
-        log: ['query', 'error', 'warn'],
+/**
+ * Global is used here to maintain a cached connection across hot reloads
+ * in development. This prevents connections growing exponentially
+ * during API Route usage.
+ */
+let cached = (global as any).mongoose;
+
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
+
+async function dbConnect() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
+
+    // Fix connection string if needed for Mongoose
+    const uri = MONGODB_URI?.replace('.net/?', '.net/aaavrti?').replace('.net?', '.net/aaavrti?') || '';
+
+    cached.promise = mongoose.connect(uri, opts).then((mongoose) => {
+      return mongoose;
     });
+  }
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
 
-// Graceful connection check helper (optional usage)
+  return cached.conn;
+}
+
+export default dbConnect;
+
+// Helper for connection check (kept for compatibility with existing code)
 export async function checkDatabaseConnection() {
     try {
-        await prisma.$queryRaw`SELECT 1`;
-        return true;
+        await dbConnect();
+        return mongoose.connection.readyState === 1; // 1 = connected
     } catch (e) {
-        console.warn("Database connection failed, falling back to mock data likely.", e);
+        console.error("Database connection failed:", e);
         return false;
     }
 }

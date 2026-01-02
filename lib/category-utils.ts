@@ -50,8 +50,11 @@ export function buildCategoryTree(categories: CategoryWithCount[]): CategoryTree
     // Sort children recursively
     const sortChildren = (cats: CategoryTree[]) => {
         cats.sort((a, b) => {
-            if (a.sortOrder !== b.sortOrder) {
-                return a.sortOrder - b.sortOrder;
+            const orderA = a.sortOrder ?? 0;
+            const orderB = b.sortOrder ?? 0;
+
+            if (orderA !== orderB) {
+                return orderA - orderB;
             }
             // Fallback to name if order is same
             return a.name_en.localeCompare(b.name_en);

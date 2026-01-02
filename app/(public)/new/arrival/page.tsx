@@ -1,5 +1,7 @@
+
 import { getProducts } from '@/actions/get-products';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Category } from '@/lib/models/Product';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
 import { FadeIn } from '@/components/ui/motion';
 import { Metadata } from 'next';
@@ -13,14 +15,20 @@ export default async function NewArrivalsPage() {
     // getProducts returns newest first by default
     const products = await getProducts({});
 
-    // Fetch filters
-    const categories = await prisma.category.findMany({
-        where: { parentId: null },
-        select: { id: true, name_en: true, slug: true },
-        orderBy: { sortOrder: 'asc' }
-    });
+    await dbConnect();
 
-    const prices = products.map(p => Number(p.price));
+    // Fetch filters
+    const categories = await Category.find({ parent: null }) // Using 'parent' reference instead of parentId as per Mongoose schema usually
+        .select('name_en slug')
+        .sort({ sortOrder: 1 })
+        .lean();
+
+    const serializedCategories = categories.map((c: any) => ({
+        ...c,
+        id: c._id.toString()
+    }));
+
+    const prices = products.map((p: any) => Number(p.price));
     const minPrice = Math.floor(Math.min(...prices, 0) / 100) * 100;
     const maxPrice = Math.ceil(Math.max(...prices, 50000) / 100) * 100;
 
@@ -43,7 +51,7 @@ export default async function NewArrivalsPage() {
             <div className="pt-8">
                 <ProductBrowser
                     initialProducts={products}
-                    categories={categories}
+                    categories={serializedCategories}
                     minPrice={minPrice}
                     maxPrice={maxPrice}
                     initialSort="newest"

@@ -12,8 +12,9 @@ import { FadeIn, RevealText, StaggerContainer, StaggerItem } from "@/components/
 import { buildCategoryTree } from "@/lib/category-utils";
 import { FeaturedCollections } from "@/components/home/FeaturedCollections";
 import { LimitedTimeOffersBanner } from "@/components/home/LimitedTimeOffersBanner";
-import { ValuePropositions } from "@/components/home/ValuePropositions";
 import { FashionShowcase } from "@/components/home/FashionShowcase";
+import { KidsAccessoriesGrid } from "@/components/home/KidsAccessoriesGrid";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -40,10 +41,11 @@ export default async function Home() {
     return id ? await getProducts({ categoryId: id }) : [];
   };
 
-  const [sarees, kurtas, mens] = await Promise.all([
+  const [sarees, kurtas, mens, women] = await Promise.all([
     getCollection('sarees'),
     getCollection('kurtas'),
-    getCollection('men')
+    getCollection('men'),
+    getCollection('women')
   ]);
 
   return (
@@ -52,8 +54,6 @@ export default async function Home() {
       {/* Dynamic Hero Section */}
       <HeroSlider banners={banners} />
 
-      {/* Value Propositions - Right after hero */}
-      <ValuePropositions />
 
       {/* Shop By Category Slider */}
       <CategoryCarousel categories={categoryTree} />
@@ -107,6 +107,16 @@ export default async function Home() {
         viewAllLink="/category/men"
       />
 
+      {/* For Her Slider */}
+      <ProductCarouselSection
+        title="For Her"
+        products={women}
+        viewAllLink="/category/women"
+      />
+
+      {/* Kids & Accessories Grid */}
+      <KidsAccessoriesGrid />
+
 
       {/* Call to Action Banner */}
       <section className="py-24 bg-secondary/20 text-center space-y-8">
@@ -127,6 +137,11 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Recently Viewed Slider - Moved to Bottom */}
+      <div className="container mx-auto px-4 pb-12">
+        <RecentlyViewed />
+      </div>
     </div>
   );
 }

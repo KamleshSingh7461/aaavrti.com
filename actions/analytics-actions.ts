@@ -1,6 +1,11 @@
-"use server";
+'use server';
 
-import { prisma } from "@/lib/db";
+import dbConnect from '@/lib/db';
+import { Order } from '@/lib/models/Order';
+import { User } from '@/lib/models/User';
+import { Product } from '@/lib/models/Product';
+// import { OrderItem } from '@/lib/models/Order'; // Order items are embedded usually?
+// In Step 96, Order model had embedded items. So we might need aggregation on Order collection to sum items.
 
 interface AnalyticsSummary {
     totalSales: number;
@@ -25,70 +30,54 @@ interface TopProduct {
 
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     try {
+        await dbConnect();
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-        // Get current period data (last 30 days)
-        const currentPeriodOrders = await prisma.order.findMany({
-            where: {
-                createdAt: { gte: thirtyDaysAgo },
-                status: { in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
-            },
-            select: {
-                total: true,
-                createdAt: true
-            }
+        // Get current period orders
+        const currentOrders = await Order.find({
+            createdAt: { $gte: thirtyDaysAgo },
+            status: { $in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
+        }).select('total');
+
+        // Get previous period orders
+        const previousOrders = await Order.find({
+            createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+            status: { $in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
+        }).select('total');
+
+        // Calculate metrics
+        const totalSales = currentOrders.reduce((sum, order) => sum + Number(order.total), 0);
+        const totalOrders = currentOrders.length;
+
+        const previousSales = previousOrders.reduce((sum, order) => sum + Number(order.total), 0);
+        const previousOrdersCount = previousOrders.length;
+
+        // New Customers
+        const newCustomers = await User.countDocuments({
+            createdAt: { $gte: thirtyDaysAgo },
+            role: "USER"
         });
 
-        // Get previous period data (30-60 days ago)
-        const previousPeriodOrders = await prisma.order.findMany({
-            where: {
-                createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo },
-                status: { in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
-            },
-            select: {
-                total: true
-            }
+        const previousNewCustomers = await User.countDocuments({
+            createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+            role: "USER"
         });
 
-        // Calculate current metrics
-        const totalSales = currentPeriodOrders.reduce((sum: number, order) => sum + Number(order.total), 0);
-        const totalOrders = currentPeriodOrders.length;
-
-        // Calculate previous metrics
-        const previousSales = previousPeriodOrders.reduce((sum: number, order) => sum + Number(order.total), 0);
-        const previousOrders = previousPeriodOrders.length;
-
-        // Get new customers (last 30 days)
-        const newCustomers = await prisma.user.count({
-            where: {
-                createdAt: { gte: thirtyDaysAgo },
-                role: "CUSTOMER"
-            }
-        });
-
-        const previousNewCustomers = await prisma.user.count({
-            where: {
-                createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo },
-                role: "CUSTOMER"
-            }
-        });
-
-        // Calculate trends
+        // Trends
         const salesTrend = previousSales > 0
             ? `${((totalSales - previousSales) / previousSales * 100).toFixed(0)}%`
             : "+100%";
 
-        const ordersTrend = previousOrders > 0
-            ? `${((totalOrders - previousOrders) / previousOrders * 100).toFixed(0)}%`
+        const ordersTrend = previousOrdersCount > 0
+            ? `${((totalOrders - previousOrdersCount) / previousOrdersCount * 100).toFixed(0)}%`
             : "+100%";
 
         const customersTrend = previousNewCustomers > 0
             ? `${((newCustomers - previousNewCustomers) / previousNewCustomers * 100).toFixed(0)}%`
             : "+100%";
 
-        // Add + sign for positive trends
         const formatTrend = (trend: string) => {
             const num = parseInt(trend);
             return num > 0 ? `+${trend}` : trend;
@@ -117,76 +106,80 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
 
 export async function getMonthlyRevenue(): Promise<MonthlyRevenue[]> {
     try {
+        await dbConnect();
         const currentYear = new Date().getFullYear();
         const startOfYear = new Date(currentYear, 0, 1);
         const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
 
-        const orders = await prisma.order.findMany({
-            where: {
-                createdAt: { gte: startOfYear, lte: endOfYear },
-                status: { in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
+        // Aggregation for monthly revenue
+        const monthlyData = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startOfYear, $lte: endOfYear },
+                    status: { $in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
+                }
             },
-            select: {
-                total: true,
-                createdAt: true
-            }
-        });
+            {
+                $group: {
+                    _id: { $month: "$createdAt" },
+                    revenue: { $sum: "$total" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
 
-        // Initialize all months with 0
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const monthlyData: MonthlyRevenue[] = monthNames.map(month => ({
-            month,
-            revenue: 0
-        }));
-
-        // Aggregate revenue by month
-        orders.forEach((order: { createdAt: Date; total: any }) => {
-            const monthIndex = order.createdAt.getMonth();
-            monthlyData[monthIndex].revenue += Number(order.total);
+        // Initialize with 0
+        const result = monthNames.map((month, index) => {
+            const found = monthlyData.find(m => m._id === index + 1);
+            return {
+                month,
+                revenue: found ? found.revenue : 0
+            };
         });
 
-        return monthlyData;
+        return result;
     } catch (error) {
         console.error("Error fetching monthly revenue:", error);
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        return monthNames.map(month => ({ month, revenue: 0 }));
+        return [];
     }
 }
 
 export async function getTopProducts(limit: number = 5): Promise<TopProduct[]> {
     try {
-        const topProducts = await prisma.orderItem.groupBy({
-            by: ['productId'],
-            _sum: {
-                quantity: true,
-                price: true
-            },
-            orderBy: {
-                _sum: {
-                    price: 'desc'
+        await dbConnect();
+        // Unwind items from orders and group by productId
+        const topProducts = await Order.aggregate([
+            { $match: { status: { $in: ["COMPLETED", "SHIPPED", "DELIVERED"] } } },
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.productId",
+                    totalSales: { $sum: "$items.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } } // Approx revenue from items
                 }
             },
-            take: limit
-        });
+            { $sort: { totalRevenue: -1 } },
+            { $limit: limit }
+        ]);
 
-        // Fetch product details
+        // Populate product names
         const productsWithDetails = await Promise.all(
             topProducts.map(async (item: any) => {
-                const product = await prisma.product.findUnique({
-                    where: { id: item.productId },
-                    select: { id: true, name_en: true }
-                });
+                // If productId is null (deleted product?), handle it
+                if (!item._id) return null;
 
+                const product = await Product.findById(item._id).select('name_en');
                 return {
-                    id: item.productId,
+                    id: item._id.toString(),
                     name: product?.name_en || "Unknown Product",
-                    totalSales: item._sum.quantity || 0,
-                    totalRevenue: Number(item._sum.price) || 0
+                    totalSales: item.totalSales,
+                    totalRevenue: item.totalRevenue
                 };
             })
         );
 
-        return productsWithDetails;
+        return productsWithDetails.filter(Boolean) as TopProduct[];
     } catch (error) {
         console.error("Error fetching top products:", error);
         return [];

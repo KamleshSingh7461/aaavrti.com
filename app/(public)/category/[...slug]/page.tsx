@@ -1,4 +1,6 @@
-import { prisma } from '@/lib/db';
+
+import dbConnect from '@/lib/db';
+import { Category } from '@/lib/models/Product';
 import { notFound } from 'next/navigation';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
 import { FadeIn } from '@/components/ui/motion';
@@ -8,54 +10,55 @@ import { getProducts } from '@/actions/get-products';
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string[] }> }) {
     const { slug } = await params;
-    const categorySlug = slug[slug.length - 1]; // Get the last slug segment
+
+    // Safety check if slug is array. If not, make it array or handle it.
+    // In [...slug], it's array.
+    const slugArray = Array.isArray(slug) ? slug : [slug];
+    const categorySlug = slugArray[slugArray.length - 1];
+
+    await dbConnect();
 
     // Find category
-    const category = await prisma.category.findUnique({
-        where: { slug: categorySlug },
-        include: {
-            parent: true,
-            children: {
-                select: {
-                    id: true,
-                    name_en: true,
-                    slug: true
-                }
-            }
-        }
-    });
+    const category = await Category.findOne({ slug: categorySlug })
+        .populate('parentId')
+        .lean();
 
     if (!category) {
         notFound();
     }
 
+    // Reverse lookup children if not populated
+    const children = await Category.find({ parentId: category._id })
+        .select('name_en slug')
+        .lean();
+
     // Fetch products in this category (using Action for consistent Mock Fallback)
     const serializedProducts = await getProducts({
-        categoryId: category.id,
+        categoryId: category._id.toString(),
         categorySlug: category.slug
     });
 
     // Fetch all categories for filter
-    const allCategories = await prisma.category.findMany({
-        select: {
-            id: true,
-            name_en: true,
-            slug: true
-        },
-        orderBy: {
-            name_en: 'asc'
-        }
-    });
+    const allCategories = await Category.find()
+        .select('name_en slug')
+        .sort({ name_en: 1 })
+        .lean();
+
+    const serializedAllCategories = allCategories.map((c: any) => ({
+        ...c,
+        _id: c._id.toString(),
+        id: c._id.toString()
+    }));
 
     // Calculate price range
-    const prices = serializedProducts.map(p => p.price);
+    const prices = serializedProducts.map((p: any) => p.price);
     const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices) / 100) * 100 : 0;
     const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices) / 100) * 100 : 50000;
 
     // Build breadcrumb
     const breadcrumbs = [];
-    if (category.parent) {
-        breadcrumbs.push({ name: category.parent.name_en, slug: category.parent.slug });
+    if (category.parentId) {
+        breadcrumbs.push({ name: (category.parentId as any).name_en, slug: (category.parentId as any).slug });
     }
     breadcrumbs.push({ name: category.name_en, slug: category.slug });
 
@@ -88,21 +91,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                     </h1>
                 </FadeIn>
 
-                {category.parent && (
+                {category.parentId && (
                     <FadeIn delay={0.1}>
                         <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {category.parent.name_en} Collection
+                            {(category.parentId as any).name_en} Collection
                         </p>
                     </FadeIn>
                 )}
             </div>
 
             {/* Subcategories - Minimal Text Links */}
-            {category.children.length > 0 && (
+            {children.length > 0 && (
                 <div className="flex flex-wrap gap-x-8 gap-y-4 justify-center items-center py-6 border-y border-border/10 max-w-3xl mx-auto">
-                    {category.children.map((child) => (
+                    {children.map((child: any) => (
                         <Link
-                            key={child.id}
+                            key={child._id.toString()}
                             href={`/category/${child.slug}`}
                             className="text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground hover:underline decoration-1 underline-offset-4 transition-all duration-300"
                         >
@@ -117,10 +120,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 {serializedProducts.length > 0 ? (
                     <ProductBrowser
                         initialProducts={serializedProducts}
-                        categories={allCategories as any} // Cast to match expected type if needed
+                        categories={serializedAllCategories}
                         minPrice={minPrice}
                         maxPrice={maxPrice}
-                        basePath={`/category/${slug.join('/')}`} // Pass current path
+                        basePath={`/category/${slugArray.join('/')}`} // Pass current path
                     />
                 ) : (
                     <div className="text-center py-12">

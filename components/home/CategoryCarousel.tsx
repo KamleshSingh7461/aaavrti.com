@@ -34,19 +34,19 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                     <h2 className={cn("text-3xl md:text-4xl font-medium", cormorant.className)}>
                         Shop by Category
                     </h2>
-                    <Link href="/products" className="text-sm border-b border-foreground/50 hover:border-foreground transition-colors pb-0.5">
+                    <Link href="/products" className="text-sm border-b-0 hover:text-primary transition-colors pb-0.5">
                         View All
                     </Link>
                 </div>
 
                 <Carousel
                     opts={{
-                        align: "start",
+                        align: "center",
                         loop: true,
                     }}
                     className="w-full"
                 >
-                    <CarouselContent className="-ml-4">
+                    <CarouselContent className="-ml-4 justify-center">
                         {categories.map((category) => (
                             <CarouselItem key={category.id} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/5">
                                 <Link href={`/category/${category.slug}`}>
@@ -58,6 +58,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                                                     alt={category.name_en}
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                                                 />
                                             ) : (
                                                 <div className="absolute inset-0 bg-secondary/30 flex items-center justify-center text-muted-foreground group-hover:bg-secondary/40 transition-colors">

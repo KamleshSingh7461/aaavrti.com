@@ -1,11 +1,18 @@
+
 import { auth } from '@/auth';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Product } from '@/lib/models/Product';
+import { Order } from '@/lib/models/Order';
+import { User } from '@/lib/models/User';
 import { Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge';
 
 export default async function DashboardPage() {
     const session = await auth();
+    // Assuming middleware protects admin routes, but good to have check
+
+    await dbConnect();
 
     // Fetch comprehensive stats
     const [
@@ -16,52 +23,50 @@ export default async function DashboardPage() {
         customersCount,
         lowStockProducts,
         recentOrders,
-        revenue,
+        revenueData,
     ] = await Promise.all([
-        prisma.product.count(),
-        prisma.product.count({ where: { status: 'ACTIVE' } }),
-        prisma.order.count(),
-        prisma.order.count({ where: { status: 'PENDING' } }),
-        prisma.user.count({ where: { role: 'USER' } }),
-        prisma.product.findMany({
-            where: {
-                stock: { lt: 5 },
-                status: 'ACTIVE',
-            },
-            select: {
-                id: true,
-                name_en: true,
-                stock: true,
-                sku: true,
-            },
-            take: 5,
-        }),
-        prisma.order.findMany({
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                user: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-        }),
-        prisma.order.aggregate({
-            _sum: { total: true },
-            where: { status: { not: 'CANCELLED' } },
-        }),
+        Product.countDocuments(),
+        Product.countDocuments({ status: 'ACTIVE' }),
+        Order.countDocuments(),
+        Order.countDocuments({ status: 'PENDING' }),
+        User.countDocuments({ role: 'USER' }),
+        Product.find({
+            stock: { $lt: 5 },
+            status: 'ACTIVE',
+        })
+            .select('name_en stock sku')
+            .limit(5)
+            .lean(),
+        // Recent Orders - need to lookup user name/email
+        Order.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean(),
+        // Revenue Aggregation
+        Order.aggregate([
+            { $match: { status: { $ne: 'CANCELLED' } } },
+            { $group: { _id: null, total: { $sum: "$total" } } }
+        ])
     ]);
 
-    const totalRevenue = Number(revenue._sum.total || 0);
+    // Populate Users for recentOrders separately to handle potential issues if user deleted or using userId string
+    // Assuming simple loop or Promise.all for 5 items is fast enough
+    const recentOrdersWithUser = await Promise.all(recentOrders.map(async (order: any) => {
+        const user = await User.findById(order.userId).select('name email').lean();
+        return {
+            ...order,
+            id: order._id.toString(),
+            user: user || { email: 'Unknown' }
+        };
+    }));
+
+    const totalRevenue = revenueData[0]?.total || 0;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-semibold font-heading">Dashboard Overview</h1>
-                {/* Subtitle moved to Page Title logic if needed, or kept here */}
             </div>
 
             {/* Stats Grid */}
@@ -109,12 +114,12 @@ export default async function DashboardPage() {
                         </Link>
                     </div>
                     <div className="space-y-4">
-                        {recentOrders.length === 0 ? (
+                        {recentOrdersWithUser.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-8">
                                 No orders yet
                             </p>
                         ) : (
-                            recentOrders.map((order) => (
+                            recentOrdersWithUser.map((order) => (
                                 <div
                                     key={order.id}
                                     className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-secondary/20 transition-colors"
@@ -168,9 +173,9 @@ export default async function DashboardPage() {
                                 All products are well stocked
                             </p>
                         ) : (
-                            lowStockProducts.map((product) => (
+                            lowStockProducts.map((product: any) => (
                                 <div
-                                    key={product.id}
+                                    key={product._id.toString()}
                                     className="flex items-center justify-between p-3 border border-orange-200 bg-orange-50/50 rounded-md"
                                 >
                                     <div>

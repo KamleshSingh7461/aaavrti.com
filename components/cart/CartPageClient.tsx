@@ -16,6 +16,8 @@ const cormorant = Cormorant_Garamond({
     weight: ['300', '400', '500', '600', '700']
 });
 
+// Interface update
+// Interface update
 interface RecommendedProduct {
     id: string;
     name_en: string;
@@ -26,7 +28,7 @@ interface RecommendedProduct {
     compareAtPrice: number | null;
     category: {
         name_en: string;
-    };
+    } | null;
 }
 
 interface CartPageClientProps {
@@ -235,7 +237,7 @@ export function CartPageClient({ initialRecommendedProducts }: CartPageClientPro
                                                 )}
                                             </div>
                                             <div className="p-3">
-                                                <p className="text-xs text-muted-foreground mb-1">{product.category.name_en}</p>
+                                                <p className="text-xs text-muted-foreground mb-1">{product.category?.name_en || 'Product'}</p>
                                                 <h3 className="text-sm font-medium line-clamp-2 mb-2 group-hover:text-primary transition-colors">
                                                     {product.name_en}
                                                 </h3>

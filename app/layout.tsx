@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 
@@ -13,12 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const cormorant = Cormorant_Garamond({
+  variable: '--font-cormorant',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+});
+
 export const metadata: Metadata = {
   title: 'Aaavrti - Timeless Indian Fashion',
   description: 'Discover exquisite handcrafted Indian clothing',
-  icons: {
-    icon: 'https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png',
-  },
 };
 
 import { auth } from '@/auth';
@@ -32,7 +35,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`} suppressHydrationWarning>
         <Providers session={session}>
           {children}
         </Providers>

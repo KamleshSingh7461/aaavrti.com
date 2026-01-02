@@ -2,7 +2,7 @@ import { getCoupons } from "@/actions/coupon-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Plus, TrendingUp, Users, DollarSign } from "lucide-react";
+import { Plus, TrendingUp, Users, DollarSign, Edit } from "lucide-react";
 
 export default async function CouponsPage() {
     const coupons = await getCoupons();
@@ -84,6 +84,7 @@ export default async function CouponsPage() {
                                 <th className="text-left p-4 font-medium text-sm">Valid Period</th>
                                 <th className="text-left p-4 font-medium text-sm">Status</th>
                                 <th className="text-left p-4 font-medium text-sm">Orders</th>
+                                <th className="text-right p-4 font-medium text-sm">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -146,6 +147,9 @@ export default async function CouponsPage() {
                                         <td className="p-4 text-sm font-medium">
                                             {coupon._count?.orders || 0}
                                         </td>
+                                        <td className="p-4 text-right">
+                                            <CouponActions coupon={coupon} />
+                                        </td>
                                     </tr>
                                 ))
                             )}
@@ -153,6 +157,18 @@ export default async function CouponsPage() {
                     </table>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function CouponActions({ coupon }: { coupon: any }) {
+    return (
+        <div className="flex items-center gap-2">
+            <Link href={`/admin/marketing/coupons/${coupon.id}`}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Edit className="h-4 w-4" />
+                </Button>
+            </Link>
         </div>
     );
 }

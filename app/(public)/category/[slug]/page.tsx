@@ -1,4 +1,6 @@
-import { prisma } from '@/lib/db';
+
+import dbConnect from '@/lib/db';
+import { Category } from '@/lib/models/Product';
 import { notFound } from 'next/navigation';
 import { ProductBrowser } from '@/components/product/ProductBrowser';
 import { FadeIn } from '@/components/ui/motion';
@@ -6,71 +8,57 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { getProducts } from '@/actions/get-products';
 
+import { serialize } from '@/lib/serialize';
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string[] }> }) {
-    // Handle both [slug] (string) and [...slug] (array) cases to be safe, 
-    // though this file is usually [slug] where param is string.
-    // BUT we are copying code from [...slug], so we need to adapt if needed.
-    // Actually, if this is [slug], params is { slug: string }.
-    // If we paste the code from [...slug], it expects { slug: string[] }.
-    // I need to be careful here.
-
-    // Let's adapt the code to handle both or strictly match the file's expected param type.
-    // Since this file is in `[slug]`, the param is `slug: string`. 
-    // The code I read from `[...slug]` expects `slug: string[]`.
-
-    // I will write a hybrid version that works for `[slug]` but renders the NEW UI.
-
     const { slug } = await params;
 
-    // Normalization: invalid for [slug] to be array, but let's handle just in case or just treat as string
+    // Normalization: Mongoose handles string vs array check
     const categorySlug = Array.isArray(slug) ? slug[slug.length - 1] : slug;
 
-    // Find category
-    const category = await prisma.category.findUnique({
-        where: { slug: categorySlug },
-        include: {
-            parent: true,
-            children: {
-                select: {
-                    id: true,
-                    name_en: true,
-                    slug: true
-                }
-            }
-        }
-    });
+    await dbConnect();
 
-    if (!category) {
+    // First fetch category
+    const rawCategory = await Category.findOne({ slug: categorySlug })
+        .populate('parentId')
+        .lean();
+
+    if (!rawCategory) {
         notFound();
     }
 
-    // Fetch products in this category (using Action for consistent Mock Fallback)
+    const category = serialize(rawCategory);
+
+    // Explicitly fetch children if not populated (reverse relation)
+    const rawChildren = await Category.find({ parentId: category._id })
+        .select('name_en slug')
+        .lean();
+
+    const children = serialize(rawChildren);
+
+    // Fetch products in this category
     const serializedProducts = await getProducts({
-        categoryId: category.id,
+        categoryId: category._id,
         categorySlug: category.slug
     });
 
     // Fetch all categories for filter
-    const allCategories = await prisma.category.findMany({
-        select: {
-            id: true,
-            name_en: true,
-            slug: true
-        },
-        orderBy: {
-            name_en: 'asc'
-        }
-    });
+    const rawAllCategories = await Category.find()
+        .select('name_en slug parentId')
+        .sort({ name_en: 1 })
+        .lean();
+
+    const serializedAllCategories = serialize(rawAllCategories);
 
     // Calculate price range
-    const prices = serializedProducts.map(p => p.price);
+    const prices = serializedProducts.map((p: any) => p.price);
     const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices) / 100) * 100 : 0;
     const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices) / 100) * 100 : 50000;
 
     // Build breadcrumb
     const breadcrumbs = [];
-    if (category.parent) {
-        breadcrumbs.push({ name: category.parent.name_en, slug: category.parent.slug });
+    if (category.parentId) {
+        breadcrumbs.push({ name: (category.parentId as any).name_en, slug: (category.parentId as any).slug });
     }
     breadcrumbs.push({ name: category.name_en, slug: category.slug });
 
@@ -103,21 +91,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                     </h1>
                 </FadeIn>
 
-                {category.parent && (
+                {category.parentId && (
                     <FadeIn delay={0.1}>
                         <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {category.parent.name_en} Collection
+                            {(category.parentId as any).name_en} Collection
                         </p>
                     </FadeIn>
                 )}
             </div>
 
             {/* Subcategories - Minimal Text Links */}
-            {category.children.length > 0 && (
+            {children.length > 0 && (
                 <div className="flex flex-wrap gap-x-8 gap-y-4 justify-center items-center py-6 border-y border-border/10 max-w-3xl mx-auto">
-                    {category.children.map((child) => (
+                    {children.map((child: any) => (
                         <Link
-                            key={child.id}
+                            key={child._id.toString()}
                             href={`/category/${child.slug}`}
                             className="text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground hover:underline decoration-1 underline-offset-4 transition-all duration-300"
                         >
@@ -132,10 +120,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 {serializedProducts.length > 0 ? (
                     <ProductBrowser
                         initialProducts={serializedProducts}
-                        categories={allCategories as any} // Cast to match expected type if needed
+                        categories={serializedAllCategories}
                         minPrice={minPrice}
                         maxPrice={maxPrice}
-                        basePath={`/category/${Array.isArray(slug) ? slug.join('/') : slug}`} // Pass current path
+                        basePath={`/category/${Array.isArray(slug) ? slug.join('/') : slug}`}
                     />
                 ) : (
                     <div className="text-center py-12">

@@ -3,13 +3,19 @@ import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { User } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
 
 async function getUser(email: string) {
     try {
-        const user = await prisma.user.findUnique({ where: { email } });
-        return user;
+        await dbConnect();
+        const user = await User.findOne({ email }).lean();
+        // User from mongoose lean() has _id, NextAuth expects id (string) often
+        if (user) {
+            return { ...user, id: user._id.toString() };
+        }
+        return null;
     } catch (error) {
         console.error('Failed to fetch user:', error);
         throw new Error('Failed to fetch user.');
@@ -51,7 +57,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
 
                 if (parsedCredentials.success) {
                     const { email, password } = parsedCredentials.data;
-                    const user = await getUser(email);
+                    const user: any = await getUser(email);
                     if (!user) return null;
 
                     // If user has no password (e.g. OAuth), return null (or handle differently)

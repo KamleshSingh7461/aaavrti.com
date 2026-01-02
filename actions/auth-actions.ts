@@ -4,7 +4,8 @@
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { User } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -28,8 +29,9 @@ export async function authenticateAdmin(
         });
 
         // Verify user is admin
+        await dbConnect();
         const email = formData.get('email') as string;
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await User.findOne({ email });
 
         if (!user) {
             return 'Invalid credentials.';
@@ -39,10 +41,7 @@ export async function authenticateAdmin(
             return 'Access denied. Admin credentials required.';
         }
 
-        // The redirectPath should ideally be passed as an argument or derived from context
-        // For now, assuming a direct redirect to /admin/dashboard as per instruction.
-        // If `redirectPath` was intended to be a parameter, the function signature would need modification.
-        const redirectPath = formData.get('redirectTo') as string | null; // Example of how redirectPath might be obtained
+        const redirectPath = formData.get('redirectTo') as string | null;
 
         if (redirectPath) {
             redirect(redirectPath);
@@ -98,10 +97,10 @@ export async function registerUser(prevState: string | undefined, formData: Form
     const { email, password, name } = validatedFields.data;
 
     try {
+        await dbConnect();
+
         // Check if user exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email }
-        });
+        const existingUser = await User.findOne({ email });
 
         if (existingUser) {
             return 'User already exists.';
@@ -111,17 +110,12 @@ export async function registerUser(prevState: string | undefined, formData: Form
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create user
-        await prisma.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-            },
+        await User.create({
+            name,
+            email,
+            password: hashedPassword,
         });
 
-        // Cannot sign in directly here in server action usually without redirect loop issues or 'use server' complexity with cookies sometimes.
-        // Easier to just return success and let client redirect to login, or attempt signIn if robust.
-        // Let's keep it simple: Return success message.
         return 'success';
 
     } catch (error) {

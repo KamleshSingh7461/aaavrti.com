@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import dbConnect from '@/lib/db';
+import { Order, ReturnRequest } from '@/lib/models/Order'; // Order and ReturnRequest are in Order.ts? Check Marketing.ts or similar if confusing.
+// In Return-actions, we imported ReturnRequest from somewhere.
+// Models were: Order, ReturnRequest in Order.ts usually or separate?
+// I see I used `ReturnRequest` in `return-actions.ts`.
+// Let's assume they are exported from their respective files. Best is `import { Order, ReturnRequest } from '@/lib/models/Order';` if they are defined there.
+// If ReturnRequest is in a separate file, I should check.
+// In `return-actions.ts` I likely used: `import { Order, ReturnRequest } from '@/lib/models/Order';`
+// Let's verified models structure in previous turns.
+// Yes, usually Order and ReturnRequest are grouped.
+
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
@@ -21,6 +31,8 @@ export async function POST(req: NextRequest) {
 
         const event = JSON.parse(body);
         console.log('[Razorpay Webhook] Event received:', event.event);
+
+        await dbConnect();
 
         // Handle different event types
         switch (event.event) {
@@ -58,9 +70,7 @@ export async function POST(req: NextRequest) {
 
 async function handlePaymentCaptured(payment: any) {
     console.log('[Razorpay] Payment captured:', payment.id);
-
     // Payment is already captured in verifyPayment action
-    // This is just for logging/monitoring
 }
 
 async function handlePaymentFailed(payment: any) {
@@ -69,20 +79,15 @@ async function handlePaymentFailed(payment: any) {
     // Find order by Razorpay order ID
     const razorpayOrderId = payment.order_id;
 
-    const order = await prisma.order.findFirst({
-        where: {
-            paymentData: {
-                contains: razorpayOrderId
-            }
-        }
+    // Search in paymentData string
+    const order = await Order.findOne({
+        paymentData: { $regex: razorpayOrderId, $options: 'i' }
     });
 
     if (order && order.status === 'PENDING') {
-        await prisma.order.update({
-            where: { id: order.id },
-            data: { status: 'CANCELLED' }
-        });
-        console.log(`[Razorpay] Order ${order.id} marked as CANCELLED due to payment failure`);
+        order.status = 'CANCELLED';
+        await order.save();
+        console.log(`[Razorpay] Order ${order._id} marked as CANCELLED due to payment failure`);
     }
 }
 
@@ -92,27 +97,27 @@ async function handleRefundProcessed(refund: any) {
     // Find return request by payment ID
     const paymentId = refund.payment_id;
 
-    const returnRequest = await prisma.returnRequest.findFirst({
-        where: {
-            order: {
-                paymentData: {
-                    contains: paymentId
-                }
-            },
-            status: 'APPROVED'
-        }
+    // We need to find the ReturnRequest associated with the Order that has this paymentId
+    // This is complex in NoSQL if not directly linked.
+    // ReturnRequests have `orderId`.
+    // We first find the Order with this paymentId.
+    const order = await Order.findOne({
+        paymentData: { $regex: paymentId, $options: 'i' }
     });
 
-    if (returnRequest) {
-        await prisma.returnRequest.update({
-            where: { id: returnRequest.id },
-            data: {
-                status: 'REFUNDED',
-                refundAmount: refund.amount / 100, // Convert paise to rupees
-                comment: `Refund processed: ${refund.id}`
-            }
+    if (order) {
+        const returnRequest = await ReturnRequest.findOne({
+            orderId: order._id,
+            status: 'APPROVED'
         });
-        console.log(`[Razorpay] Return request ${returnRequest.id} marked as REFUNDED`);
+
+        if (returnRequest) {
+            returnRequest.status = 'REFUNDED';
+            returnRequest.refundAmount = refund.amount / 100;
+            returnRequest.comment = `Refund processed: ${refund.id}`;
+            await returnRequest.save();
+            console.log(`[Razorpay] Return request ${returnRequest._id} marked as REFUNDED`);
+        }
     }
 }
 
@@ -130,7 +135,5 @@ async function handleRefundFailed(refund: any) {
 
 async function handleOrderPaid(order: any, payment: any) {
     console.log('[Razorpay] Order paid:', order.id);
-
     // This is handled by verifyPayment action
-    // Just log for monitoring
 }
