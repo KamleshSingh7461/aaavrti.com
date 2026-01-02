@@ -5,6 +5,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Cormorant_Garamond } from 'next/font/google';
+import { cn } from '@/lib/utils';
+
+const cormorant = Cormorant_Garamond({
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '600', '700']
+});
 
 
 interface Banner {
@@ -112,7 +119,10 @@ export function HeroSlider({ banners }: { banners: Banner[] }) {
                                     initial={{ y: 30, opacity: 0, filter: "blur(10px)" }}
                                     animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
                                     transition={{ delay: 0.8, duration: 1 }}
-                                    className="text-5xl md:text-7xl lg:text-9xl font-serif text-white font-light tracking-wide leading-[1.1] drop-shadow-2xl"
+                                    className={cn(
+                                        "text-5xl md:text-7xl lg:text-9xl text-white font-light tracking-wide leading-[1.1] drop-shadow-2xl",
+                                        cormorant.className
+                                    )}
                                 >
                                     {banners[current].title}
                                 </motion.h1>
