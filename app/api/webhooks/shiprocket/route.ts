@@ -8,9 +8,11 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        // Basic Security Check (Optional: verify x-shiprocket-token if configured)
-        // const token = req.headers.get('x-shiprocket-token');
-        // if (token !== process.env.SHIPROCKET_TOKEN) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Basic Security Check
+        const token = req.headers.get('x-api-key');
+        if (process.env.SHIPROCKET_WEBHOOK_TOKEN && token !== process.env.SHIPROCKET_WEBHOOK_TOKEN) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         const { current_status, order_id, awb } = body;
 
