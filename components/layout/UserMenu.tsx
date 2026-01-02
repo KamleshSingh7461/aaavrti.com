@@ -27,6 +27,8 @@ export function UserMenu({ user }: UserMenuProps) {
             router.push('/auth/login');
         } else if (isAdmin) {
             router.push('/admin/dashboard');
+        } else {
+            router.push('/account');
         }
     };
 

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { CategoryNav } from '@/components/layout/CategoryNav';
 import { CartIcon } from '@/components/layout/CartIcon';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { UserMenu } from '@/components/layout/UserMenu';
 import { LanguageToggle } from '@/components/layout/LanguageToggle';
 import { SearchModal } from '@/components/search/SearchModal';
@@ -49,6 +50,9 @@ export function HeaderClient({ categories, user }: HeaderProps) {
         <>
             <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/95 backdrop-blur-xl">
                 <div className="container mx-auto px-6 h-20 flex items-center justify-between gap-4">
+                    {/* Mobile Menu */}
+                    <MobileNav categories={categories} />
+
                     {/* Logo - Pushed Left on Mobile, Left/Center on Desktop */}
                     <div className="flex-shrink-0">
                         <Link href="/">
