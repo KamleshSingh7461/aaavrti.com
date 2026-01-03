@@ -152,11 +152,3 @@ export default async function Home() {
     </div>
   );
 }
-
-{/* Recently Viewed Slider */ }
-<div className="container mx-auto px-4 pb-24 pt-12">
-  <RecentlyViewed />
-</div>
-    </div >
-  );
-}
