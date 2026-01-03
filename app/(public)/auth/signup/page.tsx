@@ -38,9 +38,19 @@ export default function SignupPage() {
     // useEffect(() => { ... }, []);
 
     return (
-        <div className="min-h-screen flex text-foreground">
+        <div className="w-full flex flex-col lg:flex-row text-foreground bg-background">
+            {/* Mobile Image (Visible only on mobile/tablet) */}
+            <div className="lg:hidden h-48 sm:h-64 w-full relative overflow-hidden">
+                <img
+                    className="absolute inset-0 h-full w-full object-cover"
+                    src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg"
+                    alt="Heritage Fashion"
+                />
+                <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+
             {/* Left Side: Form */}
-            <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:w-[500px] xl:w-[600px] bg-background">
+            <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:w-[500px] xl:w-[600px] bg-background">
                 <div className="mx-auto w-full max-w-sm lg:max-w-md space-y-8 animate-in fade-in slide-in-from-left-8 duration-700">
 
                     <div className="space-y-2">
