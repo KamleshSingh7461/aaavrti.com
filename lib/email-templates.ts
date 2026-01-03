@@ -132,25 +132,6 @@ export const welcomeTemplate = (name: string) => baseTemplate(`
             <a href="https://aaavrti.shop/collections/all" class="btn" style="background-color: #FFD814; border-color: #FCD200;">Shop Now</a>
         </div>
     </div>
-
-    <!-- Suggested Products Section -->
-    <h3 class="section-title" style="margin-top: 30px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">More to discover</h3>
-    <table class="product-grid" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="product-cell">
-                <a href="https://aaavrti.shop/new-arrivals" style="text-decoration: none; color: inherit;">
-                    <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&q=80" class="product-img" style="height: 150px;" alt="Men's Collection">
-                    <div style="font-weight: bold; color: #007185;">Men's Fashion</div>
-                </a>
-            </td>
-            <td class="product-cell">
-                <a href="https://aaavrti.shop/new-arrivals" style="text-decoration: none; color: inherit;">
-                     <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80" class="product-img" style="height: 150px;" alt="Women's Collection">
-                     <div style="font-weight: bold; color: #007185;">Women's Fashion</div>
-                </a>
-            </td>
-        </tr>
-    </table>
 `);
 
 export const otpTemplate = (otp: string) => baseTemplate(`
