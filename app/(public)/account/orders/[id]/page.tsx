@@ -2,6 +2,7 @@
 import { auth } from '@/auth';
 import dbConnect from '@/lib/db';
 import { Order, ReturnRequest } from '@/lib/models/Order';
+import { getOrderById } from '@/actions/order-actions';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,20 +14,11 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    await dbConnect();
+    const { id } = await params;
 
-    // Find Order by ID or Order Number
-    const order = await Order.findOne({
-        $or: [
-            { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }, // Check valid objectId
-            { orderNumber: id }
-        ]
-    })
-        .populate({
-            path: 'items.product',
-            select: 'name_en images price'
-        })
-        .lean();
+    // await dbConnect(); // getOrderById handles connection
+
+    const order = await getOrderById(id);
 
     if (!order) {
         return (
@@ -51,7 +43,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
     // Or if ReturnRequest was embedded? `marketing-actions` refactor suggested ReturnRequest is separate model.
     // In `Marketing.ts`? Or `Order.ts`? I used `ReturnRequest` in `return-actions.ts`.
     // Let's assume separate model.
-    const returnRequests = await ReturnRequest.find({ orderId: order._id }).sort({ createdAt: -1 }).lean();
+    // Fetch Return Requests separately
+    await dbConnect(); // Ensure connection for ReturnRequest
+    const returnRequests = await ReturnRequest.find({ orderId: order.id }).sort({ createdAt: -1 }).lean();
 
     // Determine if eligible for Return or Cancel
     // Returns: Only DELIVERED orders within 3 days
@@ -69,7 +63,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
     const sameDay = hoursSinceOrder < 24;
     const canCancel = isConfirmed && sameDay;
 
-    const orderId = order._id.toString();
+    const orderId = order.id;
 
     return (
         <div className="container mx-auto px-4 py-12 mb-20">
