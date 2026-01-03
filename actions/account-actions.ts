@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import dbConnect from '@/lib/db';
 import { Order } from '@/lib/models/Order';
 import { User } from '@/lib/models/User';
+import { Product } from '@/lib/models/Product';
 import { revalidatePath } from 'next/cache';
 
 export interface DashboardOrder {
@@ -29,13 +30,35 @@ export async function getUserOrders(): Promise<DashboardOrder[]> {
 
     try {
         await dbConnect();
+        // Fetch orders without populate first
         const orders = await Order.find({ userId: session.user.id })
-            .populate({
-                path: 'items.productId',
-                select: 'name_en images slug'
-            })
             .sort({ createdAt: -1 })
             .lean();
+
+        // Collect all product IDs
+        const productIds = new Set<string>();
+        orders.forEach((order: any) => {
+            if (order.items) {
+                order.items.forEach((item: any) => {
+                    if (item.productId) { // items.productId is String per schema
+                        productIds.add(item.productId.toString());
+                    }
+                });
+            }
+        });
+
+        // Fetch all related products
+        const products = await Product.find({
+            $or: [
+                { _id: { $in: Array.from(productIds) } },
+                { _id: { $in: Array.from(productIds).map(id => id) } } // Ensure string/objectid matching
+            ]
+        }).lean();
+
+        const productMap = new Map();
+        products.forEach((p: any) => {
+            productMap.set(p._id.toString(), p);
+        });
 
         // Format for frontend
         return orders.map((order: any) => ({
@@ -50,8 +73,9 @@ export async function getUserOrders(): Promise<DashboardOrder[]> {
             total: Number(order.total),
             items: (order.items || []).map((item: any) => {
                 let imageUrl = '/placeholder.png';
-                // Handle different product structures (populated)
-                const product = item.productId;
+                const productId = item.productId ? item.productId.toString() : null;
+                const product = productMap.get(productId);
+
                 if (!product) {
                     return {
                         name: 'Product Deleted',

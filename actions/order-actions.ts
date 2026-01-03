@@ -169,6 +169,7 @@ export async function getOrders(filters?: {
 export async function getOrderById(id: string) {
     try {
         await dbConnect();
+        // console.log('Fetching order by ID:', id);
         const order = await Order.findById(id)
             .populate('user', 'name email phone')
             .populate('shippingAddress')
@@ -177,7 +178,8 @@ export async function getOrderById(id: string) {
                 path: 'items',
                 populate: { path: 'productId', select: 'name_en images sku' }
             })
-            .populate({ path: 'events', options: { sort: { createdAt: -1 } } })
+            // .populate({ path: 'events', options: { sort: { createdAt: -1 } } }) // Events are embedded, no need to populate
+
             .lean({ virtuals: true });
 
         if (!order) {
@@ -206,7 +208,9 @@ export async function getOrderById(id: string) {
             user: order.user,
             shippingAddress: order.shippingAddress,
             billingAddress: order.billingAddress,
-            events: (order.events || []).map((e: any) => ({ ...e, id: e._id.toString() })),
+            events: (order.events || [])
+                .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map((e: any) => ({ ...e, id: e._id.toString() })),
             items: (order.items || []).map((item: any) => ({
                 id: item._id.toString(),
                 orderId: (item.orderId || order._id).toString(),
@@ -225,6 +229,9 @@ export async function getOrderById(id: string) {
         } as any;
     } catch (error) {
         console.error('Error fetching order:', error);
+        if (error instanceof Error) {
+            console.error(error.stack);
+        }
         return null;
     }
 }
