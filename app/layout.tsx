@@ -26,6 +26,8 @@ export const metadata: Metadata = {
 
 import { auth } from '@/auth';
 
+import Script from 'next/script';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -36,6 +38,19 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`} suppressHydrationWarning>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-7CNEJFGTMT"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-7CNEJFGTMT');
+          `}
+        </Script>
         <Providers session={session}>
           {children}
         </Providers>
