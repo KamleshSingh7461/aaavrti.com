@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/lib/language';
 import { WishlistButton } from "./WishlistButton";
 import { Cormorant_Garamond } from 'next/font/google';
+import { useCompare } from '@/context/compare-context';
+import { ArrowLeftRight, Check } from 'lucide-react';
 
 const cormorant = Cormorant_Garamond({
     subsets: ['latin'],
@@ -20,6 +22,21 @@ interface ProductCardProps {
 
 export function ProductCard({ product, selectedColor }: ProductCardProps) {
     const { t } = useLanguage();
+    const { addToCompare, isInCompare, removeFromCompare } = useCompare();
+    // Handle both id (frontend) and _id (backend)
+    const productId = product.id || (product as any)._id;
+    const isInComparison = isInCompare(productId);
+
+    const handleCompare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isInComparison) {
+            removeFromCompare(productId);
+        } else {
+            // Ensure we pass both id and _id to context for consistency
+            addToCompare({ ...product, _id: productId } as any);
+        }
+    };
 
     // Robust Image Parsing
     let images: string[] = [];
@@ -73,6 +90,22 @@ export function ProductCard({ product, selectedColor }: ProductCardProps) {
                 {/* Wishlist - Top Right */}
                 <div className="absolute right-3 top-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10">
                     <WishlistButton product={product} />
+                </div>
+
+                {/* Compare Button - Top Right (Below Wishlist) */}
+                <div className="absolute right-3 top-14 opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none group-hover:pointer-events-auto">
+                    <button
+                        onClick={handleCompare}
+                        className={cn(
+                            "h-9 w-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm hover:scale-110",
+                            isInComparison
+                                ? "bg-black text-white hover:bg-black/90"
+                                : "bg-white text-black hover:bg-gray-100"
+                        )}
+                        title={isInComparison ? "Remove from Compare" : "Add to Compare"}
+                    >
+                        {isInComparison ? <Check className="h-4 w-4" /> : <ArrowLeftRight className="h-4 w-4" />}
+                    </button>
                 </div>
 
                 {/* Quick View - Bottom */}

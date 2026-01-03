@@ -1,3 +1,5 @@
+import { CompareProvider } from '@/context/compare-context';
+import { ProductCompareBar } from '@/components/product/product-compare-bar';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
@@ -22,17 +24,20 @@ export default function PublicLayout({
 }) {
     return (
         <div className={cormorant.variable}>
-            <UTMTracker />
-            <SmoothScroll>
-                <Header />
-                <main className="pb-20 md:pb-0">
-                    {children}
-                </main>
-                <Footer />
-                <CartDrawer />
-                <MobileBottomNav />
-                <NewsletterModal />
-            </SmoothScroll>
+            <CompareProvider>
+                <UTMTracker />
+                <SmoothScroll>
+                    <Header />
+                    <main className="pb-20 md:pb-0">
+                        {children}
+                    </main>
+                    <ProductCompareBar />
+                    <Footer />
+                    <CartDrawer />
+                    <MobileBottomNav />
+                    <NewsletterModal />
+                </SmoothScroll>
+            </CompareProvider>
         </div>
     );
 }
