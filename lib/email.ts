@@ -7,7 +7,7 @@ const resend = process.env.RESEND_API_KEY
 export async function sendVerificationEmail(email: string, otp: string) {
     if (!resend) {
         console.warn('RESEND_API_KEY is not set. Email not sent.');
-        return false;
+        return { success: false, error: 'Server Error: RESEND_API_KEY is missing. Please check .env and restart server.' };
     }
 
     try {
@@ -30,12 +30,12 @@ export async function sendVerificationEmail(email: string, otp: string) {
 
         if (error) {
             console.error('Error sending email:', error);
-            return false;
+            return { success: false, error: `Resend Error: ${error.message}` };
         }
 
-        return true;
-    } catch (error) {
+        return { success: true };
+    } catch (error: any) {
         console.error('Exception sending email:', error);
-        return false;
+        return { success: false, error: `Exception: ${error.message}` };
     }
 }
