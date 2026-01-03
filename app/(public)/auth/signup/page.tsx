@@ -148,7 +148,7 @@ export default function SignupPage() {
                 <div className="absolute inset-0 h-full w-full bg-zinc-900/10"></div>
                 <img
                     className="absolute inset-0 h-full w-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0"
-                    src="https://images.unsplash.com/photo-1558618774-8b598d9c6613?q=80&w=2560&auto=format&fit=crop"
+                    src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg"
                     alt="Heritage Fashion"
                 />
                 <div className="absolute bottom-10 left-10 p-10 z-10 text-white max-w-lg animate-in slide-in-from-bottom-10 duration-1000 delay-300">
