@@ -84,11 +84,11 @@ export default function AdminAbandonedOrdersPage() {
                                 <tr key={order.id} className="hover:bg-secondary/20 transition-colors">
                                     <td className="px-6 py-4 font-mono text-xs text-primary">#{order.orderNumber.slice(0, 8)}</td>
                                     <td className="px-6 py-4">
-                                        <div className="font-medium">{order.user.name || 'Guest'}</div>
-                                        <div className="text-xs text-muted-foreground">{order.user.email}</div>
+                                        <div className="font-medium">{order.user?.name || 'Guest'}</div>
+                                        <div className="text-xs text-muted-foreground">{order.user?.email || 'No Email'}</div>
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground max-w-[200px] truncate">
-                                        {order.items.map((item: any) => item.product.name_en).join(', ')}
+                                        {order.items.map((item: any) => item.product?.name_en || 'Unknown Product').join(', ')}
                                     </td>
                                     <td className="px-6 py-4 font-medium">₹{order.total.toLocaleString('en-IN')}</td>
                                     <td className="px-6 py-4 text-muted-foreground flex items-center gap-1">
@@ -107,7 +107,7 @@ export default function AdminAbandonedOrdersPage() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <button
-                                            onClick={() => handleSendRecovery(order.id, order.user.email)}
+                                            onClick={() => handleSendRecovery(order.id, order.user?.email || '')}
                                             disabled={sendingId === order.id}
                                             className="flex items-center gap-1 text-primary hover:underline text-xs ml-auto font-medium transition-all active:scale-95 disabled:opacity-50"
                                         >

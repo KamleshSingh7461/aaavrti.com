@@ -43,8 +43,8 @@ export default function InventoryPage() {
     };
 
     const filteredItems = items.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+        item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.sku && item.sku.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>;

@@ -33,6 +33,10 @@ const ReturnRequestSchema = new Schema({
     reason: { type: String, required: true },
     comment: { type: String },
     refundAmount: { type: Number },
+    items: [{
+        orderItemId: { type: String, required: true }, // Store as String to match OrderItem subdoc ID usage if needed, or ObjectId. Since OrderItems have _id.
+        quantity: { type: Number, required: true }
+    }]
 }, { timestamps: true });
 
 export const ReturnRequest = models.ReturnRequest || model('ReturnRequest', ReturnRequestSchema);
