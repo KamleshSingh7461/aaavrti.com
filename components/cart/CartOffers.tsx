@@ -36,30 +36,20 @@ export function CartOffers({ compact = false }: CartOffersProps) {
     // Fetch applicable offers based on cart items
     useEffect(() => {
         async function fetchOffers() {
-            if (items.length === 0) return;
-
             try {
-                // Get unique category IDs and product IDs from cart
-                const productIds = items.map(item => item.productId || item.id);
-
-                // Fetch offers (you'll need to create this endpoint)
-                const response = await fetch('/api/offers/cart', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productIds })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setOffers(data.offers || []);
-                }
+                // Dynamically import to avoid server-side issues in client component if not careful, 
+                // though server actions are fine to import directly usually.
+                // But for cleanliness we'll use the one we just made.
+                const { getPublicCoupons } = await import('@/actions/offer-actions');
+                const data = await getPublicCoupons();
+                setOffers(data || []);
             } catch (error) {
                 console.error('Failed to fetch offers:', error);
             }
         }
 
         fetchOffers();
-    }, [items]);
+    }, [items]); // Refresh when items change (though coupons are global mostly)
 
     if (offers.length === 0) return null;
 

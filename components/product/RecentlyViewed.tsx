@@ -76,6 +76,8 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
 
     if (filteredProducts.length === 0) {
         console.log("RecentlyViewed: Filtered list empty.");
+        // Only show this during debug or if we want to confirm it's mounted
+        // return <div className="p-4 text-center border">Debug: No recently viewed items found.</div>;
         return null;
     }
 
