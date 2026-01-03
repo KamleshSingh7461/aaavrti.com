@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Tags, BarChart3, Tag, Palette, ClipboardList, Megaphone, Server, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Tags, BarChart3, Tag, Palette, ClipboardList, Megaphone, Server, RotateCcw, Send, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -13,17 +13,11 @@ const navItems = [
     { href: '/admin/orders/abandoned', label: 'Abandoned', icon: ShoppingCart },
     { href: '/admin/products', label: 'Products', icon: Package },
     { href: '/admin/inventory', label: 'Inventory', icon: ClipboardList },
-    {
-        label: 'Marketing',
-        icon: Megaphone,
-        children: [
-            { href: '/admin/marketing/banners', label: 'Banners', icon: Megaphone },
-            { href: '/admin/marketing/newsletter', label: 'Newsletter', icon: Send },
-            { href: '/admin/marketing/coupons', label: 'Coupons', icon: Tag },
-            { href: '/admin/marketing/attribution', label: 'Attribution', icon: BarChart3 },
-            { href: '/admin/marketing/seo', label: 'SEO', icon: Search },
-        ]
-    },
+    { href: '/admin/marketing/banners', label: 'Banners', icon: Megaphone },
+    { href: '/admin/marketing/newsletter', label: 'Newsletter', icon: Send },
+    { href: '/admin/marketing/coupons', label: 'Coupons', icon: Tag },
+    { href: '/admin/marketing/attribution', label: 'Attribution', icon: BarChart3 },
+    { href: '/admin/marketing/seo', label: 'SEO', icon: Search },
     { href: '/admin/attributes', label: 'Attributes', icon: Palette },
     { href: '/admin/categories', label: 'Categories', icon: Tags },
     { href: '/admin/customers', label: 'Customers', icon: Users },
