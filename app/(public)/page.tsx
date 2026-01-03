@@ -5,16 +5,13 @@ import Link from 'next/link';
 import { getProducts, getCategoryIdBySlug } from "@/actions/get-products";
 import { getCategories } from "@/actions/category-actions";
 import { getActiveBanners, getFlashSale } from "@/actions/marketing-actions";
-import { HeroSlider } from "@/components/marketing/HeroSlider";
-import { CategoryCarousel } from "@/components/home/CategoryCarousel";
-import { ProductCarouselSection } from "@/components/home/ProductCarouselSection";
-import { FadeIn, RevealText, StaggerContainer, StaggerItem } from "@/components/ui/motion";
 import { buildCategoryTree } from "@/lib/category-utils";
-import { FeaturedCollections } from "@/components/home/FeaturedCollections";
-import { LimitedTimeOffersBanner } from "@/components/home/LimitedTimeOffersBanner";
-import { FashionShowcase } from "@/components/home/FashionShowcase";
-import { KidsAccessoriesGrid } from "@/components/home/KidsAccessoriesGrid";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
+
+// Redesign Components
+import { EditorialHero } from "@/components/home/EditorialHero";
+import { MinimalProductGrid } from "@/components/home/MinimalProductGrid";
+import { LookbookSection } from "@/components/home/LookbookSection";
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -60,105 +57,89 @@ export default async function Home() {
     return id ? await getProducts({ categoryId: id }) : [];
   };
 
-  const [sarees, kurtas, mens, women] = await Promise.all([
+  const [sarees, kurtas, mens] = await Promise.all([
     getCollection('sarees'),
     getCollection('kurtas'),
-    getCollection('men'),
-    getCollection('women')
+    getCollection('men')
   ]);
 
   return (
     <div className="flex flex-col bg-background min-h-screen">
 
-      {/* Dynamic Hero Section */}
-      <HeroSlider banners={banners} />
+      {/* 1. Full-Screen Editorial Hero */}
+      <EditorialHero banners={banners} />
 
-
-      {/* Shop By Category Slider */}
-      <CategoryCarousel categories={categoryTree} />
-
-      {/* Featured Collections Grid */}
-      <FeaturedCollections />
-
-      {/* New Arrivals / Trending Slider */}
-      <ProductCarouselSection
+      {/* 2. Minimal Trending Grid */}
+      <MinimalProductGrid
         title="Trending Now"
         products={newArrivals}
         viewAllLink="/new/arrival"
-        description="Our latest and most loved collections."
       />
 
+      {/* 3. Saree Lookbook Section */}
+      <LookbookSection
+        title="The Silk Archive"
+        subtitle="Handwoven Heritage"
+        description="Every thread tells a story of tradition, woven with precision and care for the modern muse."
+        image="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg" // Using a high-quality product image as banner placeholder if needed, or specific banner
+        link="/category/sarees"
+        align="left"
+      />
 
-      {/* Limited Time Offer Banner */}
-      <LimitedTimeOffersBanner offer={flashSale} />
-
-      {/* Sarees Collection Slider */}
-      <ProductCarouselSection
-        title="Royal Sarees"
+      {/* 4. Saree Grid */}
+      <MinimalProductGrid
+        title="Curated Sarees"
         products={sarees}
         viewAllLink="/category/sarees"
       />
 
-      {/* Kurtas Slider */}
-      <ProductCarouselSection
-        title="Elegant Kurtas"
+      {/* 5. Kurtas Lookbook Section */}
+      <LookbookSection
+        title="Elegance Redefined"
+        subtitle="Contemporary Cuts"
+        image="https://res.cloudinary.com/desdbjzzt/image/upload/v1767273761/ChatGPT_Image_Jan_1_2026_06_50_39_PM_dpejaz.png"
+        link="/category/kurtas"
+        align="right"
+      />
+
+      {/* 6. Kurtas Grid */}
+      <MinimalProductGrid
+        title="Modern Kurtas"
         products={kurtas}
         viewAllLink="/category/kurtas"
       />
 
-      {/* Fashion Showcase - Curated Collection */}
-      <FashionShowcase
-        images={[
-          "https://res.cloudinary.com/desdbjzzt/image/upload/v1767273761/ChatGPT_Image_Jan_1_2026_06_48_27_PM_cl4vvo.png",
-          "https://res.cloudinary.com/desdbjzzt/image/upload/v1767273761/ChatGPT_Image_Jan_1_2026_06_50_39_PM_dpejaz.png",
-          "https://res.cloudinary.com/desdbjzzt/image/upload/v1767273762/lehenga_bxaxpw.png",
-          "https://res.cloudinary.com/desdbjzzt/image/upload/v1767273762/sherwani_2_ohmxum.png",
-          "https://res.cloudinary.com/desdbjzzt/image/upload/v1767273763/lehenga_2_xxvkz6.png",
-          "https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg"
-        ]}
+      {/* 7. Mens Lookbook Section */}
+      <LookbookSection
+        title="The Royal Groom"
+        subtitle="For Him"
+        image="https://res.cloudinary.com/desdbjzzt/image/upload/v1767273762/sherwani_2_ohmxum.png"
+        link="/category/men"
+        align="center"
       />
 
-
-      {/* Men's Slider */}
-      <ProductCarouselSection
-        title="For Him"
-        products={mens}
-        viewAllLink="/category/men"
-      />
-
-      {/* For Her Slider */}
-      <ProductCarouselSection
-        title="For Her"
-        products={women}
-        viewAllLink="/category/women"
-      />
-
-      {/* Kids & Accessories Grid */}
-      <KidsAccessoriesGrid />
-
-
-      {/* Call to Action Banner */}
-      <section className="py-24 bg-secondary/20 text-center space-y-8">
+      {/* 8. Call to Action Banner (kept simple) */}
+      <section className="py-32 bg-secondary/10 text-center space-y-8">
         <div className="max-w-2xl mx-auto px-4 space-y-6">
-          <h2 className={cn("text-4xl md:text-5xl font-light", cormorant.className)}>
-            Discover the Art of Indian Weaves
+          <h2 className={cn("text-5xl md:text-7xl italic font-light", cormorant.className)}>
+            The Aaavrti Experience
           </h2>
-          <p className="text-muted-foreground font-light text-lg">
-            Explore our full collection of handcrafted sarees, suits, and accessories.
+          <p className="text-muted-foreground font-light text-xl">
+            Join our newsletter for exclusive access to new drops.
           </p>
           <div className="pt-4">
             <Link
-              href="/products"
-              className="inline-block px-10 py-4 bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all shadow-lg hover:shadow-xl font-medium uppercase tracking-wider"
+              href="/signup"
+              className="inline-block border-b border-black pb-1 text-lg uppercase tracking-widest hover:opacity-50 transition-opacity"
             >
-              View All Products
+              Join the Club
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Recently Viewed Slider - Moved to Bottom */}
-      <div className="container mx-auto px-4 pb-12">
+      {/* Recently Viewed Slider */}
+      <div className="container mx-auto px-4 pb-24 pt-12">
         <RecentlyViewed />
       </div>
     </div>
