@@ -215,11 +215,11 @@ export async function getOrderById(id: string) {
                 price: Number(item.price),
                 discount: Number(item.discount || 0),
                 attributes: item.attributes,
-                product: item.productId ? {
-                    id: item.productId._id.toString(),
-                    name_en: item.productId.name_en,
-                    images: item.productId.images,
-                    sku: item.productId.sku
+                product: (item.productId && typeof item.productId === 'object' && 'name_en' in item.productId) ? {
+                    id: (item.productId as any)._id.toString(),
+                    name_en: (item.productId as any).name_en,
+                    images: (item.productId as any).images,
+                    sku: (item.productId as any).sku
                 } : null,
             })),
         } as any;
