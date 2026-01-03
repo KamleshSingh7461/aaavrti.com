@@ -3,6 +3,7 @@
 // Sync check at Jan 3 02:25 AM
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { CategoryNav } from '@/components/layout/CategoryNav';
 import { CartIcon } from '@/components/layout/CartIcon';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -33,6 +34,8 @@ interface HeaderProps {
 
 export function HeaderClient({ categories, user }: HeaderProps) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const pathname = usePathname();
+    const isHomepage = pathname === '/';
 
     // Handle Cmd/Ctrl + K to open search
     useEffect(() => {
@@ -59,12 +62,7 @@ export function HeaderClient({ categories, user }: HeaderProps) {
 
     return (
         <>
-            <header className={cn(
-                "sticky top-0 z-50 w-full transition-all duration-300 border-b",
-                isScrolled
-                    ? "bg-background/95 backdrop-blur-xl border-border/30 text-foreground shadow-sm"
-                    : "bg-transparent border-transparent text-white"
-            )}>
+            <header className="sticky top-0 z-50 w-full transition-all duration-300 border-b bg-background/95 backdrop-blur-xl border-border/30 text-foreground shadow-sm">
                 <div className="container mx-auto px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
                     {/* Left: Mobile Trigger (Mobile) + Navigation (Desktop) */}
                     <div className="flex items-center justify-start gap-6">
@@ -87,10 +85,7 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                                 alt="Aaavrti"
                                 width={200}
                                 height={60}
-                                className={cn(
-                                    "object-contain max-h-14 w-auto transition-all duration-300",
-                                    !isScrolled && "brightness-0 invert" // Make logo white on dark/transparent background
-                                )}
+                                className="object-contain max-h-14 w-auto transition-all duration-300"
                                 priority
                             />
                         </Link>
@@ -103,10 +98,7 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                             <LanguageToggle />
                             <button
                                 onClick={() => setIsSearchOpen(true)}
-                                className={cn(
-                                    "p-2 transition-colors hover:text-primary",
-                                    isScrolled ? "text-foreground/70" : "text-white/90"
-                                )}
+                                className="p-2 transition-colors hover:text-primary text-foreground/70"
                                 title="Search (Ctrl+K)"
                             >
                                 <Search className="h-5 w-5" />
