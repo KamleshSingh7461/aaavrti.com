@@ -148,10 +148,10 @@ export async function registerUser(prevState: string | undefined, formData: Form
         }
 
         // Send Email
-        const emailSent = await sendVerificationEmail(email, otp);
+        const emailResult = await sendVerificationEmail(email, otp);
 
-        if (!emailSent) {
-            return 'Failed to send verification email. Please contact support.';
+        if (!emailResult.success) {
+            return emailResult.error || 'Failed to send verification email.';
         }
 
         return `verify|${email}`;
