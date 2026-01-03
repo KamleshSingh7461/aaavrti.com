@@ -121,15 +121,66 @@ export const baseTemplate = (content: string) => `
 `;
 
 export const welcomeTemplate = (name: string) => baseTemplate(`
-    <h2 class="section-title" style="color: #000; text-align: center;">Welcome to Aaavrti!</h2>
-    <p style="text-align: center; font-size: 16px;">Hello ${name || 'Friend'}, thanks for joining us.</p>
+    <div style="text-align: center; padding: 30px 20px; background: linear-gradient(to bottom, #fafafa, #ffffff);">
+        <h1 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 42px; font-weight: 300; font-style: italic; color: #1a1a1a; margin-bottom: 10px;">Welcome to Aaavrti</h1>
+        <p style="text-align: center; font-size: 16px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;">Timeless Indian Fashion</p>
+    </div>
+
+    <div style="padding: 0 20px 40px;">
+        <p style="text-align: center; font-size: 17px; color: #333; line-height: 1.8; max-width: 500px; margin: 0 auto 30px;">
+            Thank you for joining the Aaavrti family, ${name || 'Friend'}. You'll now be the first to discover our exclusive collections, handcrafted weaves, and timeless pieces that celebrate heritage with modern elegance.
+        </p>
     
-    <div style="background: linear-gradient(to right, #232f3e, #1a2530); color: white; padding: 25px; border-radius: 8px; text-align: center; margin: 20px 0;">
-        <h3 style="margin: 0; font-size: 24px; color: #fff;">Enjoy 10% OFF</h3>
-        <p style="color: #ccc; margin: 10px 0 20px;">Use this code on your first order:</p>
-        <div style="background: white; color: #000; padding: 10px 20px; font-weight: bold; letter-spacing: 2px; font-size: 20px; display: inline-block; border-radius: 4px;">WELCOME10</div>
-        <div style="margin-top: 20px;">
-            <a href="https://aaavrti.shop/collections/all" class="btn" style="background-color: #FFD814; border-color: #FCD200;">Shop Now</a>
+        <!-- Premium Discount Box -->
+        <div style="background: linear-gradient(135deg, #d4af37 0%, #c99a2e 100%); border-radius: 8px; padding: 40px 30px; text-align: center; margin: 30px auto; max-width: 500px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+            <div style="color: #1a1a1a; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">Welcome Gift</div>
+            <div style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 56px; font-weight: 700; color: #ffffff; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); margin-bottom: 15px;">10% OFF</div>
+            <p style="color: #1a1a1a; margin-bottom: 15px; font-size: 15px;">Use this exclusive code on your first order:</p>
+            <div style="background: white; color: #1a1a1a; padding: 12px 30px; font-weight: bold; letter-spacing: 4px; font-size: 20px; display: inline-block; border-radius: 4px; border: 2px dashed #d4af37; margin: 10px 0;">WELCOME10</div>
+            <p style="color: #1a1a1a; font-size: 12px; margin-top: 15px; opacity: 0.8;">*Valid on all products | Minimum purchase ₹2,000</p>
+            <div style="margin-top: 25px;">
+                <a href="https://aaavrti.shop/new/arrival" style="display: inline-block; background-color: #1a1a1a; color: #fff; padding: 14px 40px; text-decoration: none; border-radius: 2px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">Explore New Arrivals</a>
+            </div>
+        </div>
+
+        <!-- Benefits Section -->
+        <div style="background: #fafafa; border-radius: 8px; padding: 35px 25px; margin: 30px auto; max-width: 500px; border: 1px solid #e0e0e0;">
+            <h3 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; text-align: center; color: #1a1a1a; margin-bottom: 25px;">What You'll Receive</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 20px; margin-bottom: 5px;">✨</div>
+                <h4 style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 5px 0;">Exclusive Early Access</h4>
+                <p style="font-size: 14px; color: #666; margin: 0; line-height: 1.6;">Be the first to shop new collections before they go live</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 20px; margin-bottom: 5px;">🎁</div>
+                <h4 style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 5px 0;">Special Offers</h4>
+                <p style="font-size: 14px; color: #666; margin: 0; line-height: 1.6;">Subscriber-only discounts and seasonal promotions</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 20px; margin-bottom: 5px;">📖</div>
+                <h4 style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 5px 0;">Style Inspiration</h4>
+                <p style="font-size: 14px; color: #666; margin: 0; line-height: 1.6;">Curated lookbooks and styling tips from our heritage experts</p>
+            </div>
+
+            <div>
+                <div style="font-size: 20px; margin-bottom: 5px;">🧵</div>
+                <h4 style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 5px 0;">Artisan Stories</h4>
+                <p style="font-size: 14px; color: #666; margin: 0; line-height: 1.6;">Behind-the-scenes glimpses of our handcrafted weaves</p>
+            </div>
+        </div>
+
+        <!-- Social Media -->
+        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid #e0e0e0;">
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase;">Follow Our Journey</p>
+            <div>
+                <a href="https://instagram.com/aaavrti" style="display: inline-block; width: 36px; height: 36px; line-height: 36px; border-radius: 50%; background: #1a1a1a; color: #fff; margin: 0 5px; text-decoration: none;">📷</a>
+                <a href="https://facebook.com/aaavrti" style="display: inline-block; width: 36px; height: 36px; line-height: 36px; border-radius: 50%; background: #1a1a1a; color: #fff; margin: 0 5px; text-decoration: none;">📘</a>
+                <a href="https://twitter.com/aaavrti" style="display: inline-block; width: 36px; height: 36px; line-height: 36px; border-radius: 50%; background: #1a1a1a; color: #fff; margin: 0 5px; text-decoration: none;">🐦</a>
+                <a href="https://pinterest.com/aaavrti" style="display: inline-block; width: 36px; height: 36px; line-height: 36px; border-radius: 50%; background: #1a1a1a; color: #fff; margin: 0 5px; text-decoration: none;">📌</a>
+            </div>
         </div>
     </div>
 `);
