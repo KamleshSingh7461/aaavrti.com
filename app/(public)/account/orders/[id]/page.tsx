@@ -14,8 +14,6 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const { id } = await params;
-
     // await dbConnect(); // getOrderById handles connection
 
     const order = await getOrderById(id);
