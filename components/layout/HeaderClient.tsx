@@ -47,9 +47,24 @@ export function HeaderClient({ categories, user }: HeaderProps) {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     return (
         <>
-            <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/95 backdrop-blur-xl transition-all duration-300">
+            <header className={cn(
+                "sticky top-0 z-50 w-full transition-all duration-300 border-b",
+                isScrolled
+                    ? "bg-background/95 backdrop-blur-xl border-border/30 text-foreground shadow-sm"
+                    : "bg-transparent border-transparent text-white"
+            )}>
                 <div className="container mx-auto px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
                     {/* Left: Mobile Trigger (Mobile) + Navigation (Desktop) */}
                     <div className="flex items-center justify-start gap-6">
@@ -72,7 +87,10 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                                 alt="Aaavrti"
                                 width={200}
                                 height={60}
-                                className="object-contain max-h-14 w-auto"
+                                className={cn(
+                                    "object-contain max-h-14 w-auto transition-all duration-300",
+                                    !isScrolled && "brightness-0 invert" // Make logo white on dark/transparent background
+                                )}
                                 priority
                             />
                         </Link>
@@ -85,7 +103,10 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                             <LanguageToggle />
                             <button
                                 onClick={() => setIsSearchOpen(true)}
-                                className="p-2 hover:bg-secondary/30 transition-colors text-foreground/70 hover:text-primary"
+                                className={cn(
+                                    "p-2 transition-colors hover:text-primary",
+                                    isScrolled ? "text-foreground/70" : "text-white/90"
+                                )}
                                 title="Search (Ctrl+K)"
                             >
                                 <Search className="h-5 w-5" />
