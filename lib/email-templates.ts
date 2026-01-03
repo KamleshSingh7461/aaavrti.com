@@ -88,7 +88,7 @@ export const baseTemplate = (content: string) => `
         <!-- Logo Header -->
         <div class="header">
             <a href="https://aaavrti.shop" style="text-decoration: none;">
-                <img src="https://aaavrti.shop/aaavrti_logo.png" alt="AAAVRTI" class="logo-img" style="vertical-align: middle;"/>
+                <img src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png" alt="AAAVRTI" class="logo-img" style="vertical-align: middle;"/>
             </a>
         </div>
 
