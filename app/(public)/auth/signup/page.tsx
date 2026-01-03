@@ -71,6 +71,17 @@ export default function SignupPage() {
                             />
                         </div>
                         <div className="space-y-2">
+                            <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                            <input
+                                id="phone"
+                                type="tel"
+                                name="phone"
+                                placeholder="+91 98765 43210"
+                                required
+                                className="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            />
+                        </div>
+                        <div className="space-y-2">
                             <label htmlFor="password" className="text-sm font-medium">Password</label>
                             <input
                                 id="password"

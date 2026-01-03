@@ -14,6 +14,7 @@ const SignUpSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
     password: z.string().min(6),
+    phone: z.string().min(10, "Phone number must be at least 10 digits"),
 });
 
 // Admin authentication - validates admin role
@@ -97,6 +98,7 @@ export async function authenticateCustomer(
 
 import { sendEmail } from '@/lib/email-service';
 import { otpTemplate } from '@/lib/email-templates';
+import { sendOTP } from '@/lib/notifications';
 
 export async function registerUser(prevState: string | undefined, formData: FormData) {
     const validatedFields = SignUpSchema.safeParse(Object.fromEntries(formData.entries()));
@@ -105,7 +107,7 @@ export async function registerUser(prevState: string | undefined, formData: Form
         return 'Missing Fields. Failed to Register.';
     }
 
-    const { email, password, name } = validatedFields.data;
+    const { email, password, name, phone } = validatedFields.data;
 
     try {
         await dbConnect();
@@ -141,6 +143,7 @@ export async function registerUser(prevState: string | undefined, formData: Form
                 name,
                 email,
                 password: hashedPassword,
+                phone, // Save phone number
                 otp,
                 otpExpiry
             });
@@ -155,6 +158,14 @@ export async function registerUser(prevState: string | undefined, formData: Form
             html: otpTemplate(otp),
             category: 'OTP'
         });
+
+        // Send OTP via WhatsApp (Fire and forget, don't block registration if it fails)
+        try {
+            await sendOTP(phone, email, otp, name);
+        } catch (waError) {
+            console.error('Failed to send WhatsApp OTP:', waError);
+            // Continue execution, email is the primary method
+        }
 
         if (!emailResult.success) {
             return emailResult.error || 'Failed to send verification email.';
