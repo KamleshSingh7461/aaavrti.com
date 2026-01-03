@@ -49,7 +49,49 @@ export async function getOffers() {
  * Get applicable offers for a specific product
  * Now uses Coupon model
  */
+// ... keep existing code ...
+
+/**
+ * Get public coupons for the cart display
+ * Filters only active and valid coupons
+ */
+export async function getPublicCoupons() {
+    const now = new Date();
+
+    try {
+        await dbConnect();
+        const coupons = await Coupon.find({
+            active: true,
+            validFrom: { $lte: now },
+            validUntil: { $gte: now }
+        }).lean();
+
+        // Filter coupons with usage limits
+        const availableCoupons = coupons.filter((coupon: any) => {
+            if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
+                return false;
+            }
+            return true;
+        });
+
+        // Serialize for client
+        return availableCoupons.map((coupon: any) => ({
+            id: coupon._id.toString(),
+            code: coupon.code,
+            type: coupon.type,
+            value: Number(coupon.value),
+            minAmount: Number(coupon.minOrderValue || 0),
+            maxDiscount: coupon.maxDiscount ? Number(coupon.maxDiscount) : null,
+            endDate: coupon.validUntil.toISOString(),
+        }));
+    } catch (e) {
+        console.error('Failed to get public coupons:', e);
+        return [];
+    }
+}
+
 export async function getApplicableOffers(productId: string, categoryId: string) {
+    // ... keep existing code ...
     const now = new Date();
 
     try {
