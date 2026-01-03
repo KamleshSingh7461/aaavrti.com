@@ -29,7 +29,7 @@ export default async function OrderSuccessPage({ params }: { params: Promise<{ o
                     </div>
                     <h1 className="text-3xl font-serif font-medium mb-2">Order Confirmed!</h1>
                     <p className="text-muted-foreground">
-                        Thank you, {order.shippingAddress?.name.split(' ')[0] || 'valued customer'}.<br />
+                        Thank you, {order.shippingAddress?.name?.split(' ')[0] || 'valued customer'}.<br />
                         Your order has been placed successfully.
                     </p>
                 </div>
