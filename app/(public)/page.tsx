@@ -58,9 +58,10 @@ export default async function Home() {
     return id ? await getProducts({ categoryId: id }) : [];
   };
 
-  const [sarees, kurtas, mens] = await Promise.all([
+  const [sarees, kurtas, womens, mens] = await Promise.all([
     getCollection('sarees'),
     getCollection('kurtas'),
+    getCollection('women'),
     getCollection('men')
   ]);
 
@@ -117,7 +118,15 @@ export default async function Home() {
         viewAllLink="/category/kurtas"
       />
 
-      {/* 9. Mens Lookbook Section */}
+      {/* 9. For Her Product Carousel */}
+      <ProductCarouselSection
+        title="For Her"
+        products={womens}
+        viewAllLink="/category/women"
+        description="Exquisite collections for the modern woman"
+      />
+
+      {/* 10. Mens Lookbook Section */}
       <LookbookSection
         title="The Royal Groom"
         subtitle="For Him"
@@ -126,7 +135,15 @@ export default async function Home() {
         align="center"
       />
 
-      {/* 10. Call to Action Banner */}
+      {/* 11. For Him Product Carousel */}
+      <ProductCarouselSection
+        title="For Him"
+        products={mens}
+        viewAllLink="/category/men"
+        description="Timeless elegance for the distinguished gentleman"
+      />
+
+      {/* 12. Call to Action Banner */}
       <section className="py-32 bg-secondary/10 text-center space-y-8">
         <div className="max-w-2xl mx-auto px-4 space-y-6">
           <h2 className={cn("text-5xl md:text-7xl italic font-light", cormorant.className)}>
@@ -137,7 +154,7 @@ export default async function Home() {
           </p>
           <div className="pt-4">
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="inline-block border-b border-black pb-1 text-lg uppercase tracking-widest hover:opacity-50 transition-opacity"
             >
               Join the Club
