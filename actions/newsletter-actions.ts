@@ -177,7 +177,7 @@ export async function sendNewsletter(subject: string, htmlContent: string) {
         await Promise.all(
             emails.map(async (email: string) => {
                 const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
-                const finalHtml = newsletterTemplate(htmlContent, unsubscribeUrl);
+                const finalHtml = newsletterTemplate(trackedHtmlContent, unsubscribeUrl);
 
                 const result = await sendEmail({
                     to: email,
