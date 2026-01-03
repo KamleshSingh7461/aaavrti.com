@@ -22,14 +22,13 @@ export function NewsletterModal() {
 
         // Check localStorage
         const dismissed = localStorage.getItem("newsletter_dismissed");
-        // if (!dismissed) { // BYPASS CHECK FOR DEBUGGING
-        const timer = setTimeout(() => {
-            console.log("Newsletter Modal Timer trigger (Bypassed Check)");
-            setIsOpen(true);
-        }, 2000); // 2 seconds delay
+        if (!dismissed) {
+            const timer = setTimeout(() => {
+                setIsOpen(true);
+            }, 2000); // 2 seconds delay
 
-        return () => clearTimeout(timer);
-        // }
+            return () => clearTimeout(timer);
+        }
     }, []);
 
     const handleDismiss = () => {
