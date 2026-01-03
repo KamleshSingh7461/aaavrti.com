@@ -95,7 +95,8 @@ export async function authenticateCustomer(
     }
 }
 
-import { sendVerificationEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email-service';
+import { otpTemplate } from '@/lib/email-templates';
 
 export async function registerUser(prevState: string | undefined, formData: FormData) {
     const validatedFields = SignUpSchema.safeParse(Object.fromEntries(formData.entries()));
@@ -148,7 +149,12 @@ export async function registerUser(prevState: string | undefined, formData: Form
         }
 
         // Send Email
-        const emailResult = await sendVerificationEmail(email, otp);
+        const emailResult = await sendEmail({
+            to: email,
+            subject: 'Verify your Aaavrti Account',
+            html: otpTemplate(otp),
+            category: 'OTP'
+        });
 
         if (!emailResult.success) {
             return emailResult.error || 'Failed to send verification email.';
@@ -212,7 +218,12 @@ export async function resendOtp(email: string) {
         user.otpExpiry = otpExpiry;
         await user.save();
 
-        await sendVerificationEmail(email, otp);
+        await sendEmail({
+            to: email,
+            subject: 'Verify your Aaavrti Account',
+            html: otpTemplate(otp),
+            category: 'OTP'
+        });
 
         return { success: true, message: 'OTP resent.' };
 

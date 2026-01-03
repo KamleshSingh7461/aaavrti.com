@@ -28,6 +28,17 @@ export async function subscribeNewsletter(email: string) {
 
         await NewsletterSubscriber.create({ email });
 
+        const { sendEmail } = await import('@/lib/email-service');
+        const { welcomeTemplate } = await import('@/lib/email-templates');
+
+        // Send Welcome Email
+        await sendEmail({
+            to: email,
+            subject: 'Welcome to Aaavrti - 10% OFF Inside',
+            html: welcomeTemplate('Friend'),
+            category: 'WELCOME'
+        });
+
         revalidatePath('/admin/marketing/newsletter');
         return { success: true, message: 'Thank you for subscribing!' };
     } catch (error) {
@@ -128,9 +139,8 @@ export async function unsubscribeNewsletter(email: string) {
  */
 export async function sendNewsletter(subject: string, htmlContent: string) {
     try {
-        // Dynamic import to avoid issues during build if resend not configured
-        const { resend } = await import('@/lib/resend');
-        if (!resend) return { error: 'Resend not configured' };
+        const { sendEmail } = await import('@/lib/email-service');
+        const { newsletterTemplate } = await import('@/lib/email-templates');
 
         await dbConnect();
         const subscribers = await NewsletterSubscriber.find({ isActive: true }).select('email');
@@ -140,42 +150,31 @@ export async function sendNewsletter(subject: string, htmlContent: string) {
         }
 
         const emails = subscribers.map((sub: any) => sub.email);
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://aaavrti.com';
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://aaavrti.shop';
 
-        // Resend limited to 50 emails in one call for the free tier/some plans
-        // We'll send sequentially or batch if needed.
-        // For now, let's try sending to list if Resend supports broadcasting, or iterate.
-        // Sending individually for simplicity in this migration snippet.
+        // Custom SMTP sending
+        // In production with many subscribers, you should use a queue (like BullMQ or Amazon SQS)
+        // For now, we will loop and send. 
+
+        let successCount = 0;
 
         await Promise.all(
-            emails.map((email: string) => {
+            emails.map(async (email: string) => {
                 const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
+                const finalHtml = newsletterTemplate(htmlContent, unsubscribeUrl);
 
-                return resend.emails.send({
-                    from: 'Aaavrti <newsletter@aaavrti.com>',
+                const result = await sendEmail({
                     to: email,
-                    subject: subject,
-                    html: `
-                        <div style="font-family: serif; line-height: 1.6; color: #333;">
-                            ${htmlContent}
-                            <hr style="border: none; border-top: 1px solid #eee; margin: 40px 0 20px;" />
-                            <div style="font-size: 12px; color: #999; text-align: center;">
-                                <p>© ${new Date().getFullYear()} Aaavrti. All rights reserved.</p>
-                                <p>You are receiving this because you subscribed to our newsletter.</p>
-                                <p><a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Unsubscribe</a> from this list.</p>
-                            </div>
-                        </div>
-                    `,
-                    headers: {
-                        'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@aaavrti.com?subject=unsubscribe>`,
-                        'List-Id': 'Aaavrti Newsletter <newsletter.aaavrti.com>',
-                        'X-Entity-Ref-ID': `newsletter-${Date.now()}`
-                    }
+                    subject,
+                    html: finalHtml,
+                    category: 'NEWSLETTER'
                 });
+
+                if (result.success) successCount++;
             })
         );
 
-        return { success: true, count: emails.length };
+        return { success: true, count: successCount };
     } catch (error) {
         console.error('Error sending newsletter:', error);
         return { error: 'Failed to send newsletter' };
