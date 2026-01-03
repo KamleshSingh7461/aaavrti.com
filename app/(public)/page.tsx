@@ -8,10 +8,10 @@ import { getActiveBanners, getFlashSale } from "@/actions/marketing-actions";
 import { buildCategoryTree } from "@/lib/category-utils";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 
-// Redesign Components
-import { EditorialHero } from "@/components/home/EditorialHero";
-import { EditorialProductSlider } from "@/components/home/EditorialProductSlider";
-import { EditorialCategorySlider } from "@/components/home/EditorialCategorySlider";
+// Original Components (Restored)
+import { HeroSlider } from "@/components/marketing/HeroSlider";
+import { CategoryCarousel } from "@/components/home/CategoryCarousel";
+import { ProductCarouselSection } from "@/components/home/ProductCarouselSection";
 import { LookbookSection } from "@/components/home/LookbookSection";
 import { LimitedTimeOffersBanner } from "@/components/home/LimitedTimeOffersBanner";
 
@@ -67,20 +67,21 @@ export default async function Home() {
   return (
     <div className="flex flex-col bg-background min-h-screen">
 
-      {/* 1. Full-Screen Editorial Hero */}
-      <EditorialHero banners={banners} />
+      {/* 1. Original Hero Slider (Premium with Gold Accents) */}
+      <HeroSlider banners={banners} />
 
-      {/* 2. Top Category Slider (The "Sliders" user missed) */}
-      <EditorialCategorySlider categories={categoryTree} />
+      {/* 2. Original Category Carousel (Vertical Cards) */}
+      <CategoryCarousel categories={categoryTree} />
 
-      {/* 3. Limited Time Flash Sale (Restored) */}
+      {/* 3. Limited Time Flash Sale */}
       <LimitedTimeOffersBanner offer={flashSale as any} />
 
-      {/* 4. Minimal Trending Slider */}
-      <EditorialProductSlider
-        title="Trending Now"
+      {/* 4. New Arrivals Carousel */}
+      <ProductCarouselSection
+        title="New Arrivals"
         products={newArrivals}
         viewAllLink="/new/arrival"
+        description="Discover our latest handcrafted pieces"
       />
 
       {/* 5. Saree Lookbook Section */}
@@ -93,8 +94,8 @@ export default async function Home() {
         align="left"
       />
 
-      {/* 6. Saree Slider */}
-      <EditorialProductSlider
+      {/* 6. Sarees Carousel */}
+      <ProductCarouselSection
         title="Curated Sarees"
         products={sarees}
         viewAllLink="/category/sarees"
@@ -109,8 +110,8 @@ export default async function Home() {
         align="right"
       />
 
-      {/* 8. Kurtas Slider */}
-      <EditorialProductSlider
+      {/* 8. Kurtas Carousel */}
+      <ProductCarouselSection
         title="Modern Kurtas"
         products={kurtas}
         viewAllLink="/category/kurtas"
