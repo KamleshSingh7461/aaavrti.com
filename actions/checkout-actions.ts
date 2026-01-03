@@ -21,6 +21,16 @@ export async function verifyPincode(pincode: string) {
         const service = new ShiprocketService();
         // Auth handled internally
         const serviceResult = await service.checkServiceability(pincode);
+        let etd = '';
+
+        // Strict Check: Ensure couriers are available
+        const couriers = serviceResult?.data?.available_courier_companies || [];
+        const isServiceable = couriers.length > 0;
+
+        if (isServiceable) {
+            // Get ETD from the first/best courier
+            etd = couriers[0].etd; // usually string date '2025-01-05'
+        }
 
         // 2. Fetch City/State details
         let city = '';
@@ -38,10 +48,11 @@ export async function verifyPincode(pincode: string) {
         }
 
         return {
-            success: true,
+            success: isServiceable && !!city, // Strict success only if serviceable AND valid pincode
             data: serviceResult,
             city,
-            state
+            state,
+            etd
         };
     } catch (error: any) {
         console.error('Pincode verification failed:', error);
@@ -77,9 +88,11 @@ export async function saveAddress(formData: FormData) {
     const city = formData.get('city') as string;
     const state = formData.get('state') as string;
     const postalCode = formData.get('postalCode') as string;
+    const houseNo = formData.get('houseNo') as string;
+    const landmark = formData.get('landmark') as string;
     const phone = formData.get('phone') as string;
 
-    if (!name || !street || !city || !state || !postalCode || !phone) {
+    if (!name || !street || !city || !state || !postalCode || !phone || !houseNo) {
         return { error: 'Missing required fields' };
     }
 
@@ -92,6 +105,8 @@ export async function saveAddress(formData: FormData) {
             city,
             state,
             postalCode,
+            houseNo,
+            landmark,
             phone,
             country: 'IN', // Hardcoded for now
             type: 'SHIPPING'
@@ -118,9 +133,11 @@ export async function updateAddress(formData: FormData) {
     const city = formData.get('city') as string;
     const state = formData.get('state') as string;
     const postalCode = formData.get('postalCode') as string;
+    const houseNo = formData.get('houseNo') as string;
+    const landmark = formData.get('landmark') as string;
     const phone = formData.get('phone') as string;
 
-    if (!id || !name || !street || !city || !state || !postalCode || !phone) {
+    if (!id || !name || !street || !city || !state || !postalCode || !phone || !houseNo) {
         return { error: 'Missing required fields' };
     }
 
@@ -133,7 +150,7 @@ export async function updateAddress(formData: FormData) {
         }
 
         const updated = await Address.findByIdAndUpdate(id, {
-            name, street, city, state, postalCode, phone
+            name, street, city, state, postalCode, phone, houseNo, landmark
         }, { new: true }).lean();
 
         const address = { ...updated, id: updated._id.toString() };
