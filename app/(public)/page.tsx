@@ -10,14 +10,15 @@ import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 
 // Redesign Components
 import { EditorialHero } from "@/components/home/EditorialHero";
-import { MinimalProductGrid } from "@/components/home/MinimalProductGrid";
+import { EditorialProductSlider } from "@/components/home/EditorialProductSlider";
+import { EditorialCategorySlider } from "@/components/home/EditorialCategorySlider";
 import { LookbookSection } from "@/components/home/LookbookSection";
+import { LimitedTimeOffersBanner } from "@/components/home/LimitedTimeOffersBanner";
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700']
 });
-
 
 import { getMetadataForPath } from "@/actions/seo-actions";
 import { Metadata } from "next";
@@ -69,31 +70,37 @@ export default async function Home() {
       {/* 1. Full-Screen Editorial Hero */}
       <EditorialHero banners={banners} />
 
-      {/* 2. Minimal Trending Grid */}
-      <MinimalProductGrid
+      {/* 2. Top Category Slider (The "Sliders" user missed) */}
+      <EditorialCategorySlider categories={categoryTree} />
+
+      {/* 3. Limited Time Flash Sale (Restored) */}
+      <LimitedTimeOffersBanner offer={flashSale as any} />
+
+      {/* 4. Minimal Trending Slider */}
+      <EditorialProductSlider
         title="Trending Now"
         products={newArrivals}
         viewAllLink="/new/arrival"
       />
 
-      {/* 3. Saree Lookbook Section */}
+      {/* 5. Saree Lookbook Section */}
       <LookbookSection
         title="The Silk Archive"
         subtitle="Handwoven Heritage"
         description="Every thread tells a story of tradition, woven with precision and care for the modern muse."
-        image="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg" // Using a high-quality product image as banner placeholder if needed, or specific banner
+        image="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg"
         link="/category/sarees"
         align="left"
       />
 
-      {/* 4. Saree Grid */}
-      <MinimalProductGrid
+      {/* 6. Saree Slider */}
+      <EditorialProductSlider
         title="Curated Sarees"
         products={sarees}
         viewAllLink="/category/sarees"
       />
 
-      {/* 5. Kurtas Lookbook Section */}
+      {/* 7. Kurtas Lookbook Section */}
       <LookbookSection
         title="Elegance Redefined"
         subtitle="Contemporary Cuts"
@@ -102,14 +109,14 @@ export default async function Home() {
         align="right"
       />
 
-      {/* 6. Kurtas Grid */}
-      <MinimalProductGrid
+      {/* 8. Kurtas Slider */}
+      <EditorialProductSlider
         title="Modern Kurtas"
         products={kurtas}
         viewAllLink="/category/kurtas"
       />
 
-      {/* 7. Mens Lookbook Section */}
+      {/* 9. Mens Lookbook Section */}
       <LookbookSection
         title="The Royal Groom"
         subtitle="For Him"
@@ -118,7 +125,7 @@ export default async function Home() {
         align="center"
       />
 
-      {/* 8. Call to Action Banner (kept simple) */}
+      {/* 10. Call to Action Banner */}
       <section className="py-32 bg-secondary/10 text-center space-y-8">
         <div className="max-w-2xl mx-auto px-4 space-y-6">
           <h2 className={cn("text-5xl md:text-7xl italic font-light", cormorant.className)}>
@@ -143,5 +150,13 @@ export default async function Home() {
         <RecentlyViewed />
       </div>
     </div>
+  );
+}
+
+{/* Recently Viewed Slider */ }
+<div className="container mx-auto px-4 pb-24 pt-12">
+  <RecentlyViewed />
+</div>
+    </div >
   );
 }
