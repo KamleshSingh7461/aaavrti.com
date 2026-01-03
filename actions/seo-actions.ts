@@ -135,10 +135,10 @@ export async function getSEORankings(limit = 50) {
 /**
  * Add Ranking Record
  */
-export async function addRanking(data: { keyword: string; url: string; position: number }) {
+export async function trackSEORanking(keyword: string, position: number, url: string) {
     try {
         await dbConnect();
-        await SEOTracking.create(data);
+        await SEOTracking.create({ keyword, position, url });
         revalidatePath('/admin/marketing/seo');
         return { success: true };
     } catch (error: any) {
