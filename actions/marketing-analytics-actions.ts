@@ -23,16 +23,19 @@ interface CouponPerformance {
 export async function getChannelPerformance() {
     try {
         await dbConnect();
-        // Aggregate by source
+        // Aggregate by source and medium to categorize
         const stats = await Order.aggregate([
             {
                 $match: {
-                    status: { $in: ["COMPLETED", "SHIPPED", "DELIVERED"] }
+                    status: { $in: ["COMPLETED", "SHIPPED", "DELIVERED", "CONFIRMED"] } // Added CONFIRMED
                 }
             },
             {
                 $group: {
-                    _id: { $ifNull: ["$source", "DIRECT"] },
+                    _id: {
+                        source: { $ifNull: ["$source", "DIRECT"] },
+                        medium: { $ifNull: ["$medium", "none"] }
+                    },
                     orders: { $sum: 1 },
                     revenue: { $sum: "$total" }
                 }
@@ -40,12 +43,37 @@ export async function getChannelPerformance() {
             { $sort: { revenue: -1 } }
         ]);
 
-        return stats.map(stat => ({
-            source: stat._id,
-            orders: stat.orders,
-            revenue: stat.revenue,
-            averageOrderValue: stat.orders > 0 ? stat.revenue / stat.orders : 0
-        }));
+        // Process in JS for complex bucketing (easier than Mongo $switch for now)
+        const bucketed = stats.reduce((acc: any[], stat) => {
+            const source = (stat._id.source || '').toLowerCase();
+            const medium = (stat._id.medium || '').toLowerCase();
+            let channel = 'Referral';
+
+            if (medium.includes('email')) channel = 'Email';
+            else if (medium.includes('cpc') || medium.includes('ppc') || medium.includes('paid')) channel = 'Paid Ads';
+            else if (medium.includes('social') || source.includes('facebook') || source.includes('instagram')) channel = 'Social Media';
+            else if (medium.includes('organic') || source.includes('google') || source.includes('bing')) channel = 'Organic Search';
+            else if (source === 'direct') channel = 'Direct';
+
+            const existing = acc.find(c => c.source === channel);
+            if (existing) {
+                existing.orders += stat.orders;
+                existing.revenue += stat.revenue;
+            } else {
+                acc.push({
+                    source: channel,
+                    orders: stat.orders,
+                    revenue: stat.revenue
+                });
+            }
+            return acc;
+        }, []);
+
+        return bucketed.map(b => ({
+            ...b,
+            averageOrderValue: b.orders > 0 ? b.revenue / b.orders : 0
+        })).sort((a, b) => b.revenue - a.revenue);
+
     } catch (error) {
         console.error("Error fetching channel performance:", error);
         return [];
