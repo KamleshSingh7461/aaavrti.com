@@ -36,7 +36,7 @@ export function MobileNav({ categories, user }: MobileNavProps) {
                     <span className="sr-only">Open Menu</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0 overflow-y-auto">
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0 overflow-y-auto max-h-screen overscroll-contain">
                 <SheetHeader className="sr-only">
                     <SheetTitle>Navigation Menu</SheetTitle>
                     <SheetDescription>Browse categories and account links</SheetDescription>
