@@ -1,4 +1,5 @@
 'use server';
+import mongoose from 'mongoose';
 
 import dbConnect from '@/lib/db';
 import { Order, OrderEvent } from '@/lib/models/Order';
@@ -105,8 +106,8 @@ export async function getOrders(filters?: {
             Order.find(query)
                 .populate({ path: 'user', select: 'name email phone' })
                 .populate({
-                    path: 'items',
-                    populate: { path: 'productId', select: 'name_en images' } // nested populate 
+                    path: 'items.productId',
+                    select: 'name_en images'
                 })
                 .populate('shippingAddress')
                 .sort({ createdAt: -1 })
@@ -166,23 +167,31 @@ export async function getOrders(filters?: {
 }
 
 // Get single order by ID with full details
+// Get single order by ID with full details
 export async function getOrderById(id: string) {
     try {
         await dbConnect();
-        // console.log('Fetching order by ID:', id);
-        const order = await Order.findById(id)
-            .populate('user', 'name email phone')
-            .populate('shippingAddress')
-            .populate('billingAddress')
-            .populate({
-                path: 'items',
-                populate: { path: 'productId', select: 'name_en images sku' }
-            })
-            // .populate({ path: 'events', options: { sort: { createdAt: -1 } } }) // Events are embedded, no need to populate
 
-            .lean({ virtuals: true });
+        let order = null;
+        const populateOptions = [
+            { path: 'user', select: 'name email phone' },
+            { path: 'shippingAddress' },
+            { path: 'billingAddress' },
+            { path: 'items.productId', select: 'name_en images sku' }
+        ];
+
+        // 1. Try by ObjectId
+        if (mongoose.isValidObjectId(id)) {
+            order = await Order.findById(id).populate(populateOptions).lean({ virtuals: true });
+        }
+
+        // 2. Try by Order Number if not found
+        if (!order) {
+            order = await Order.findOne({ orderNumber: id }).populate(populateOptions).lean({ virtuals: true });
+        }
 
         if (!order) {
+            console.log('Order not found by ID or Number:', id);
             return null;
         }
 

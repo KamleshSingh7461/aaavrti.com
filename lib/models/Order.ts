@@ -102,6 +102,13 @@ OrderSchema.virtual('shippingAddress', {
     justOne: true
 });
 
+OrderSchema.virtual('billingAddress', {
+    ref: 'Address',
+    localField: 'billingAddressId',
+    foreignField: '_id',
+    justOne: true
+});
+
 OrderSchema.virtual('user', {
     ref: 'User',
     localField: 'userId',
