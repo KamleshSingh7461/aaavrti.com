@@ -449,16 +449,25 @@ export function CheckoutForm({ initialAddresses, user }: CheckoutFormProps) {
 function AddressForm({ onSave, onCancel, loading }: any) {
     const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
     const [pincodeMsg, setPincodeMsg] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
 
     const handlePincodeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
         const pincode = e.target.value;
         if (pincode.length !== 6) return;
 
+        // Reset previous state
+        setCity('');
+        setState('');
+
         setPincodeStatus('checking');
         const res = await verifyPincode(pincode);
+
         if (res.success) {
             setPincodeStatus('valid');
             setPincodeMsg('Delivery available');
+            if (res.city) setCity(res.city);
+            if (res.state) setState(res.state);
         } else {
             setPincodeStatus('invalid');
             setPincodeMsg('Delivery not available for this pincode');
@@ -494,6 +503,8 @@ function AddressForm({ onSave, onCancel, loading }: any) {
                     name="city"
                     placeholder="City"
                     required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                     className="bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <input
@@ -501,6 +512,8 @@ function AddressForm({ onSave, onCancel, loading }: any) {
                     name="state"
                     placeholder="State"
                     required
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
                     className="bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <div className="col-span-2 space-y-1">
