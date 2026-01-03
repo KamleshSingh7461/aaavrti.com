@@ -24,6 +24,8 @@ const UserSchema = new Schema({
   phone: { type: String },
   role: { type: String, default: "USER" },
   emailVerified: { type: Date },
+  otp: { type: String },
+  otpExpiry: { type: Date },
   image: { type: String },
 
   // Relations (Virtuals or embedded if needed, but keeping relational for now to match Prisma)
