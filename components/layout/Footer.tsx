@@ -62,9 +62,10 @@ export function Footer() {
                     <div className="space-y-5">
                         <h4 className={cn("text-lg font-light text-foreground", cormorant.className)}>Legal</h4>
                         <ul className="space-y-3 text-sm text-muted-foreground">
-                            <li><Link href="/policy/shipping" className="hover:text-primary transition-colors">Shipping</Link></li>
-                            <li><Link href="/policy/refund" className="hover:text-primary transition-colors">Refunds</Link></li>
-                            <li><Link href="/policy/terms" className="hover:text-primary transition-colors">Terms</Link></li>
+                            <li><Link href="/policy/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="/policy/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link></li>
+                            <li><Link href="/policy/refund" className="hover:text-primary transition-colors">Refund & Cancellation</Link></li>
+                            <li><Link href="/policy/shipping" className="hover:text-primary transition-colors">Shipping & Delivery</Link></li>
                         </ul>
                     </div>
                 </div>
