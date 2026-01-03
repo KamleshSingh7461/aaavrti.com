@@ -46,8 +46,17 @@ export default function CustomerLoginPage() {
             </div>
 
             {/* Left Side: Form */}
-            <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:w-[500px] xl:w-[600px] bg-background">
-                <div className="mx-auto w-full max-w-sm lg:max-w-md space-y-8 animate-in fade-in slide-in-from-left-8 duration-700">
+            <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:w-[500px] xl:w-[600px] bg-background relative overflow-hidden">
+                {/* Decorative Background for Form Side */}
+                <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
+                    <img
+                        src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg"
+                        className="w-full h-full object-cover blur-3xl scale-150"
+                        alt=""
+                    />
+                </div>
+
+                <div className="mx-auto w-full max-w-sm lg:max-w-md space-y-8 animate-in fade-in slide-in-from-left-8 duration-700 relative z-10">
 
                     <div className="space-y-2">
                         <Link href="/" className={cn("text-2xl font-serif font-bold tracking-tighter", outfit.className)}>
@@ -71,7 +80,7 @@ export default function CustomerLoginPage() {
                                         name="email"
                                         placeholder="you@example.com"
                                         required
-                                        className="flex h-12 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                                        className="flex h-12 w-full rounded-lg border border-input bg-background/80 backdrop-blur-sm pl-10 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                                     />
                                 </div>
                             </div>
@@ -93,7 +102,7 @@ export default function CustomerLoginPage() {
                                         name="password"
                                         required
                                         minLength={6}
-                                        className="flex h-12 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                                        className="flex h-12 w-full rounded-lg border border-input bg-background/80 backdrop-blur-sm pl-10 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                                     />
                                 </div>
                             </div>
@@ -120,7 +129,7 @@ export default function CustomerLoginPage() {
             <div className="hidden lg:block relative flex-1 bg-muted">
                 <div className="absolute inset-0 h-full w-full bg-zinc-900/10"></div>
                 <img
-                    className="absolute inset-0 h-full w-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0"
+                    className="absolute inset-0 h-full w-full object-cover transition-all duration-1000"
                     src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767263859/aaavrti/products/mtsiljloa040vdrk35qq.jpg"
                     alt="Fashion Editorial"
                 />
