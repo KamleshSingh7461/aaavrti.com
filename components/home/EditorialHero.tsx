@@ -83,7 +83,7 @@ export function EditorialHero({ banners }: { banners: Banner[] }) {
                                 animate={{ y: 0, opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.3, duration: 0.8 }}
                                 className={cn(
-                                    "text-6xl md:text-8xl lg:text-[8rem] leading-[0.9] text-white italic font-medium mix-blend-overlay",
+                                    "text-6xl md:text-8xl lg:text-[8rem] leading-[0.9] text-white italic font-medium drop-shadow-sm",
                                     cormorant.className
                                 )}
                             >
