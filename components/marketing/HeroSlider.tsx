@@ -77,7 +77,7 @@ export function HeroSlider({ banners }: { banners: Banner[] }) {
 
                         {/* Cinematic Gradient Overlays */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
-                        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" /> {/* Texture if available, else subtle */}
+                        {/* <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" /> */} {/* Texture removed - causing 404 */}
 
                         {/* Decorative Border Frame */}
                         <div className="absolute inset-4 sm:inset-8 border-[1px] border-white/20 pointer-events-none z-10 hidden md:block">
