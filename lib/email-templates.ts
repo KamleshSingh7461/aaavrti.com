@@ -197,12 +197,32 @@ export const orderConfirmationTemplate = (order: any) => {
     `);
 };
 
-export const newsletterTemplate = (content: string, unsubscribeLink: string) => baseTemplate(`
-    ${content}
-    <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #999;">
-        <p>If you prefer not to receive these emails, you can <a href="${unsubscribeLink}">unsubscribe here</a>.</p>
+export const newsletterTemplate = (content: string, unsubscribeLink: string) => `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>${emailStyles}</style>
+</head>
+<body>
+    <div class="container">
+        <!-- Raw Content Area -->
+        <div class="content" style="padding: 0;">
+            ${content}
+        </div>
+
+        <!-- Mandatory Unsubscribe Footer -->
+        <div class="footer" style="padding-top: 20px; border-top: none;">
+            <p style="font-size: 11px; color: #999;">
+                <a href="${unsubscribeLink}">Unsubscribe</a> | <a href="https://aaavrti.shop/pages/privacy-policy">Privacy Policy</a>
+            </p>
+            <p style="font-size: 11px; color: #ccc;">Aaavrti.shop</p>
+        </div>
     </div>
-`);
+</body>
+</html>
+`;
 
 // Cart Recovery (Amazon-style "You might like" grid)
 export const recoveryTemplate = (recoveryLink: string, items: any[]) => {
