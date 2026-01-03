@@ -96,9 +96,14 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                             {order.items.map((item: any) => (
                                 <div key={item.id} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
                                     <div className="flex-1">
-                                        <div className="font-medium">{item.product.name_en}</div>
-                                        {item.product.sku && (
+                                        <div className="font-medium">
+                                            {item.product?.name_en || 'Unknown Product'}
+                                        </div>
+                                        {item.product?.sku && (
                                             <div className="text-xs text-muted-foreground">SKU: {item.product.sku}</div>
+                                        )}
+                                        {!item.product && (
+                                            <div className="text-xs text-red-500">Product may have been deleted</div>
                                         )}
                                     </div>
                                     <div className="text-right">
@@ -140,14 +145,14 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                             <div>
                                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Contact Details</h3>
                                 <div className="space-y-1">
-                                    <p className="font-medium">{order.user.name || 'Guest'}</p>
-                                    <p className="text-sm text-muted-foreground">{order.user.email}</p>
-                                    {order.user.phone && (
+                                    <p className="font-medium">{order.user?.name || 'Guest'}</p>
+                                    <p className="text-sm text-muted-foreground">{order.user?.email || 'No Email'}</p>
+                                    {order.user?.phone && (
                                         <p className="text-sm text-muted-foreground">{order.user.phone}</p>
                                     )}
                                 </div>
                             </div>
-                            {order.shippingAddress && (
+                            {order.shippingAddress ? (
                                 <div>
                                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Shipping Address</h3>
                                     <div className="text-sm space-y-0.5">
@@ -159,6 +164,11 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                                         <p>{order.shippingAddress.country}</p>
                                         <p className="text-muted-foreground">Ph: {order.shippingAddress.phone}</p>
                                     </div>
+                                </div>
+                            ) : (
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Shipping Address</h3>
+                                    <p className="text-sm text-yellow-600">No shipping address found</p>
                                 </div>
                             )}
                         </div>

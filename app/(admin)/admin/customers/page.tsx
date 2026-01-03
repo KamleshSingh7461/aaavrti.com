@@ -130,7 +130,7 @@ export default function CustomersPage() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <Link
-                                            href={`/customers/${customer.id}`}
+                                            href={`/admin/customers/${customer.id}`}
                                             className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium text-xs"
                                         >
                                             <Eye className="h-3 w-3" />

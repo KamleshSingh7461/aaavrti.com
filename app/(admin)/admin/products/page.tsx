@@ -247,7 +247,7 @@ export default function AdminProductsPage() {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="p-4 text-sm">{product.category.name_en}</td>
+                                    <td className="p-4 text-sm">{product.category?.name_en || 'Uncategorized'}</td>
                                     <td className="p-4 text-sm font-medium">₹{product.price.toLocaleString()}</td>
                                     <td className="p-4">
                                         <span className={`text-sm ${product.stock === 0 ? 'text-red-600' : product.stock < 5 ? 'text-orange-600' : ''}`}>
