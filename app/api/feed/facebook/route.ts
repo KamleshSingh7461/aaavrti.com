@@ -8,8 +8,9 @@ export async function GET() {
         await dbConnect();
 
         // Fetch published products
+        // Fetch published products (check widely for 'published' or 'active' statuses)
         const products = await Product.find({
-            status: 'PUBLISHED'
+            status: { $in: ['PUBLISHED', 'published', 'ACTIVE', 'active'] }
         })
             .populate('categoryId')
             .sort({ updatedAt: -1 })
