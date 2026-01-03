@@ -154,7 +154,8 @@ export async function registerUser(prevState: string | undefined, formData: Form
             return emailResult.error || 'Failed to send verification email.';
         }
 
-        return `verify|${email}`;
+        // Redirect directly from server action
+        redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
 
     } catch (error) {
         console.error('Registration Error:', error);
