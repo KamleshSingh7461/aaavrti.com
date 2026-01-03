@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import { WishlistItem } from '@/lib/models/User';
 import { Product } from '@/lib/models/Product';
@@ -112,8 +113,14 @@ export async function syncWishlist(productIds: string[]) {
         let validNewIds = productIds.filter(id => !existingIds.has(id));
 
         if (validNewIds.length > 0) {
-            // Verify products exist
-            const validProducts = await Product.find({ _id: { $in: validNewIds } }).select('_id');
+            // Verify products exist with robust ID check
+            const objectIds = validNewIds.filter(id => mongoose.isValidObjectId(id)).map(id => new mongoose.Types.ObjectId(id));
+            const validProducts = await Product.find({
+                $or: [
+                    { _id: { $in: validNewIds } },
+                    { _id: { $in: objectIds } }
+                ]
+            }).select('_id');
             const validProductSet = new Set(validProducts.map((p: any) => p._id.toString()));
             validNewIds = validNewIds.filter(id => validProductSet.has(id));
         }

@@ -1,13 +1,23 @@
 'use server';
 
 import dbConnect from '@/lib/db';
+import mongoose from 'mongoose';
 import { Product } from '@/lib/models/Product';
 
 export async function getRecommendedProducts(cartItemIds: string[], limit: number = 4) {
     try {
         await dbConnect();
+
+        // Robust ID handling
+        const objectIds = cartItemIds.filter(id => mongoose.isValidObjectId(id)).map(id => new mongoose.Types.ObjectId(id));
+
         // Get categories of items in cart
-        const cartItems = await Product.find({ _id: { $in: cartItemIds } }).select('categoryId');
+        const cartItems = await Product.find({
+            $or: [
+                { _id: { $in: cartItemIds } },
+                { _id: { $in: objectIds } }
+            ]
+        }).select('categoryId');
 
         const categoryIds = [...new Set(cartItems.map(item => item.categoryId))];
 
