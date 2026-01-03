@@ -24,8 +24,9 @@ export function NewsletterModal() {
         const dismissed = localStorage.getItem("newsletter_dismissed");
         if (!dismissed) {
             const timer = setTimeout(() => {
+                console.log("Newsletter Modal Timer trigger");
                 setIsOpen(true);
-            }, 3000); // 3 seconds delay
+            }, 2000); // 2 seconds delay
 
             return () => clearTimeout(timer);
         }

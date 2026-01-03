@@ -373,13 +373,16 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
             }))
         }], { session: sessionTransaction });
 
-        // 6. If COD, Confirm immediately
         if (paymentMethod === 'COD') {
             await Order.findByIdAndUpdate(order[0]._id, { status: 'CONFIRMED' }, { session: sessionTransaction });
         }
 
         await sessionTransaction.commitTransaction();
         sessionTransaction.endSession();
+
+        // Send Email (Fire and forget-ish, or await)
+        // Since we are in a server action, awaiting is safer.
+        await sendOrderEmail(order[0]._id.toString());
 
         return { success: true, orderId: order[0]._id.toString(), total: Number(finalTotal), paymentMethod };
 
@@ -388,5 +391,67 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
         sessionTransaction.endSession();
         console.error('Order creation failed:', error);
         return { error: error.message || 'Failed to create order' };
+    }
+}
+
+// Separate function to send email asynchronously so it doesn't block the order response significantly
+// or ideally use after checks. But server actions are awaited.
+// We can fire and forget if looking for speed, but Next.js serverless might kill it. 
+// Safer to await or use waitUntil (if Vercel/Next supports).
+// Let's await it to be sure.
+
+export async function sendOrderEmail(orderId: string) {
+    try {
+        const { sendEmail } = await import('@/lib/email-service');
+        const { orderConfirmationTemplate } = await import('@/lib/email-templates');
+
+        await dbConnect();
+        const order = await Order.findById(orderId).populate('shippingAddressId');
+        if (!order) return;
+
+        // Populate product names for template (order.items has productId, populate it)
+        // Wait, items in Order schema might be using productId ref.
+        // Let's populate deeply if needed or just use what we have.
+        // The template expects array of { name, quantity, price }
+
+        // We need to fetch product names because they might not be fully embedded if schema is just ID
+        // Schema checks: items: [{ productId: ..., quantity: ..., price: ... }]
+        // We need to look up names.
+
+        const enrichedItems = await Promise.all(order.items.map(async (item: any) => {
+            const p = await Product.findById(item.productId).select('name_en');
+            return {
+                name: p?.name_en || 'Product',
+                quantity: item.quantity,
+                price: item.price
+            };
+        }));
+
+        const toSend = {
+            id: order._id.toString(),
+            orderNumber: order._id.toString().slice(-6).toUpperCase(),
+            createdAt: order.createdAt,
+            customerName: 'Customer', // We might need to fetch User name or use Address name
+            subtotal: order.subtotal,
+            total: order.total,
+            discount: order.discountTotal,
+            shippingAddress: order.shippingAddressId, // Populated
+            items: enrichedItems
+        };
+
+        // Fetch user name if available
+        const User = mongoose.models.User;
+        const user = await User.findById(order.userId);
+        if (user) toSend.customerName = user.name;
+
+        await sendEmail({
+            to: user?.email || 'kamlesh7461@gmail.com',
+            subject: `Order Confirmed #${toSend.orderNumber}`,
+            html: orderConfirmationTemplate(toSend),
+            category: 'ORDER'
+        });
+
+    } catch (e) {
+        console.error("Failed to send order email", e);
     }
 }
