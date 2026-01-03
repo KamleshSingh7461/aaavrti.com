@@ -210,7 +210,7 @@ export async function getOrderById(id: string) {
             items: (order.items || []).map((item: any) => ({
                 id: item._id.toString(),
                 orderId: (item.orderId || order._id).toString(),
-                productId: item.productId ? item.productId._id.toString() : null,
+                productId: (item.productId && typeof item.productId === 'object' && '_id' in item.productId) ? (item.productId as any)._id.toString() : (item.productId as string),
                 quantity: item.quantity,
                 price: Number(item.price),
                 discount: Number(item.discount || 0),
