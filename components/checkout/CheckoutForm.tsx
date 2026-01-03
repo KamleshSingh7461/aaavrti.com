@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/lib/store';
-import { saveAddress, createOrder } from '@/actions/checkout-actions';
+import { saveAddress, createOrder, verifyPincode } from '@/actions/checkout-actions';
 import { createRazorpayOrder, verifyPayment } from '@/actions/payment-actions';
 import { useRouter } from 'next/navigation';
 import { Loader2, Plus, MapPin, Truck, ShieldCheck, CreditCard, Banknote, Package, Check } from 'lucide-react';
@@ -447,6 +447,24 @@ export function CheckoutForm({ initialAddresses, user }: CheckoutFormProps) {
 
 // Address Form Component
 function AddressForm({ onSave, onCancel, loading }: any) {
+    const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+    const [pincodeMsg, setPincodeMsg] = useState('');
+
+    const handlePincodeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+        const pincode = e.target.value;
+        if (pincode.length !== 6) return;
+
+        setPincodeStatus('checking');
+        const res = await verifyPincode(pincode);
+        if (res.success) {
+            setPincodeStatus('valid');
+            setPincodeMsg('Delivery available');
+        } else {
+            setPincodeStatus('invalid');
+            setPincodeMsg('Delivery not available for this pincode');
+        }
+    };
+
     return (
         <form onSubmit={onSave} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -485,13 +503,29 @@ function AddressForm({ onSave, onCancel, loading }: any) {
                     required
                     className="bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 />
-                <input
-                    type="text"
-                    name="postalCode"
-                    placeholder="Postal Code"
-                    required
-                    className="col-span-2 bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
+                <div className="col-span-2 space-y-1">
+                    <input
+                        type="text"
+                        name="postalCode"
+                        placeholder="Postal Code"
+                        required
+                        maxLength={6}
+                        onBlur={handlePincodeBlur}
+                        onChange={(e) => {
+                            if (pincodeStatus !== 'idle') setPincodeStatus('idle');
+                            // Only allow numbers
+                            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                        }}
+                        className={cn(
+                            "w-full bg-background border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary",
+                            pincodeStatus === 'invalid' ? "border-red-500 focus:ring-red-500" :
+                                pincodeStatus === 'valid' ? "border-green-500 focus:ring-green-500" : "border-border"
+                        )}
+                    />
+                    {pincodeStatus === 'checking' && <p className="text-xs text-muted-foreground">Checking availability...</p>}
+                    {pincodeStatus === 'valid' && <p className="text-xs text-green-600">{pincodeMsg}</p>}
+                    {pincodeStatus === 'invalid' && <p className="text-xs text-red-600">{pincodeMsg}</p>}
+                </div>
             </div>
             <div className="flex gap-3">
                 <button

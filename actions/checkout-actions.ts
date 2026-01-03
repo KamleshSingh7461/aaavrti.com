@@ -13,6 +13,20 @@ import { getAttributionFromCookies } from '@/lib/utm-tracker';
 import { headers } from 'next/headers';
 import mongoose from 'mongoose';
 
+import { ShiprocketService } from '@/lib/services/shiprocket';
+
+export async function verifyPincode(pincode: string) {
+    try {
+        const service = new ShiprocketService();
+        await service.authenticate();
+        const result = await service.checkServiceability(pincode);
+        return { success: true, data: result };
+    } catch (error: any) {
+        console.error('Pincode verification failed:', error);
+        return { error: error.message || 'Failed to verify pincode' };
+    }
+}
+
 export async function getAddresses() {
     const session = await auth();
     if (!session?.user?.id) return [];
