@@ -18,7 +18,8 @@ import { ShiprocketService } from '@/lib/services/shiprocket';
 export async function verifyPincode(pincode: string) {
     try {
         const service = new ShiprocketService();
-        await service.authenticate();
+        // Auth handled internally by checkServiceability with env vars
+        // await service.authenticate();
         const result = await service.checkServiceability(pincode);
         return { success: true, data: result };
     } catch (error: any) {
