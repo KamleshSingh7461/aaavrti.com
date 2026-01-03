@@ -1,4 +1,4 @@
-'use server';
+
 
 /**
  * Multi-channel notification service with automatic fallback
