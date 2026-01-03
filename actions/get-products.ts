@@ -2,6 +2,7 @@
 'use server';
 
 import dbConnect from '@/lib/db';
+import mongoose from 'mongoose';
 import { Product, Category } from '@/lib/models/Product';
 import { Product as ProductType } from '@/lib/types';
 import { serialize } from '@/lib/serialize';
@@ -63,7 +64,14 @@ export async function getProductById(id: string): Promise<ProductType | undefine
     try {
         await dbConnect();
         console.log(`[getProductById] Fetching product: ${id}`);
-        const p = await Product.findById(id).populate('categoryId').lean();
+
+        let query: any = { _id: id };
+
+        if (mongoose.isValidObjectId(id)) {
+            query = { $or: [{ _id: id }, { _id: new mongoose.Types.ObjectId(id) }] };
+        }
+
+        const p = await Product.findOne(query).populate('categoryId').lean();
         console.log(`[getProductById] Result:`, p ? 'Found' : 'Not Found');
         return p ? serialize(p) : undefined;
     } catch (e) {
