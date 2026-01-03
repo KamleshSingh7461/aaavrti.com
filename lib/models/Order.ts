@@ -28,7 +28,7 @@ export const OrderEvent = models.OrderEvent || model('OrderEvent', OrderEventSch
 // --- return Request ---
 const ReturnRequestSchema = new Schema({
     orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: String, ref: 'User', required: true }, // Changed to String for NextAuth UUID compatibility
     status: { type: String, default: "PENDING" }, // PENDING, APPROVED, REJECTED, REFUNDED
     reason: { type: String, required: true },
     comment: { type: String },
@@ -56,7 +56,7 @@ export const ReturnItem = models.ReturnItem || model('ReturnItem', ReturnItemSch
 // --- Order Schema ---
 const OrderSchema = new Schema({
     orderNumber: { type: String, default: () => `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`, unique: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: String, ref: 'User', required: true }, // Changed to String for NextAuth UUID compatibility
     status: { type: String, default: "PENDING" },
 
     shippingAddressId: { type: Schema.Types.ObjectId, ref: 'Address' },

@@ -243,6 +243,7 @@ export const orderConfirmationTemplate = (order: any) => {
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
+            <a href="https://aaavrti.shop/track?order=${order.orderNumber}" class="btn" style="margin-right: 10px;">Track Your Order</a>
             <a href="https://aaavrti.shop/account/orders/${order.id}" class="btn">View or Manage Order</a>
         </div>
     `);

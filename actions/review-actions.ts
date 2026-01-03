@@ -15,9 +15,9 @@ export async function canReviewProduct(productId: string) {
         await dbConnect();
 
         // Find if user has a delivered order containing this product
-        // And ensure it's not refunded/returned (basic check)
+        // Note: userId in session is a UUID string, not ObjectId
         const order = await Order.findOne({
-            userId: session.user.id,
+            userId: session.user.id, // This works because userId field accepts strings
             status: 'DELIVERED',
             'items.productId': productId
         }).select('items');
