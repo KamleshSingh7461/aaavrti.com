@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Aaavrti Newsletter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Header with Logo */
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 180px;
+            height: auto;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hero-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 48px;
+            font-weight: 300;
+            font-style: italic;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.95;
+        }
+
+        /* Welcome Message */
+        .welcome-section {
+            padding: 50px 40px;
+            text-align: center;
+            background: #ffffff;
+        }
+
+        .welcome-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 36px;
+            font-weight: 400;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+
+        /* Discount Coupon */
+        .discount-box {
+            background: linear-gradient(135deg, #d4af37 0%, #c99a2e 100%);
+            border-radius: 8px;
+            padding: 35px 30px;
+            margin: 30px 40px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .discount-label {
+            color: #1a1a1a;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .discount-amount {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 56px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .coupon-code {
+            background: #ffffff;
+            color: #1a1a1a;
+            padding: 12px 30px;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 15px 0;
+            border: 2px dashed #d4af37;
+        }
+
+        .discount-note {
+            color: #1a1a1a;
+            font-size: 12px;
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+
+        /* CTA Button */
+        .cta-container {
+            text-align: center;
+            padding: 0 40px 40px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 16px 50px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 2px;
+            transition: background 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background: #2d2d2d;
+        }
+
+        /* Benefits Section */
+        .benefits {
+            background: #fafafa;
+            padding: 50px 40px;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .benefits-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 28px;
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 35px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            padding: 0 20px;
+        }
+
+        .benefit-icon {
+            font-size: 24px;
+            margin-right: 20px;
+            color: #d4af37;
+        }
+
+        .benefit-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+
+        .benefit-content p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Social Links */
+        .social-section {
+            padding: 40px;
+            text-align: center;
+            background: #ffffff;
+        }
+
+        .social-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-icon {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            background: #d4af37;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a1a;
+            color: #999;
+            padding: 40px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .footer a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+
+        .footer-links {
+            margin: 20px 0;
+        }
+
+        .footer-links a {
+            margin: 0 10px;
+            color: #999;
+            text-decoration: underline;
+        }
+
+        .footer-logo {
+            max-width: 120px;
+            margin: 20px auto;
+            opacity: 0.7;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .welcome-section,
+            .discount-box,
+            .cta-container,
+            .benefits,
+            .social-section {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .discount-amount {
+                font-size: 42px;
+            }
+
+            .benefit-item {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <img src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png"
+                alt="Aaavrti" class="logo">
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero">
+            <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1200&q=80"
+                alt="Heritage Collection" class="hero-image">
+            <div class="hero-overlay">
+                <div class="hero-title">Welcome to Aaavrti</div>
+                <div class="hero-subtitle">Timeless Elegance</div>
+            </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">You're In!</h1>
+            <p class="welcome-text">
+                Thank you for joining the Aaavrti family. You'll now be the first to know about new collections,
+                exclusive offers, and timeless pieces crafted with heritage and love.
+            </p>
+        </div>
+
+        <!-- Discount Offer -->
+        <div class="discount-box">
+            <div class="discount-label">Welcome Gift</div>
+            <div class="discount-amount">10% OFF</div>
+            <p style="color: #1a1a1a; margin-bottom: 15px;">Use this exclusive code on your first order:</p>
+            <div class="coupon-code">WELCOME10</div>
+            <p class="discount-note">*Valid on all products | Minimum purchase ₹2,000</p>
+        </div>
+
+        <!-- CTA Button -->
+        <div class="cta-container">
+            <a href="https://aaavrti.shop/new/arrival" class="cta-button">Explore New Arrivals</a>
+        </div>
+
+        <!-- Benefits Section -->
+        <div class="benefits">
+            <h2 class="benefits-title">What You'll Receive</h2>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">✨</span>
+                <div class="benefit-content">
+                    <h3>Exclusive Early Access</h3>
+                    <p>Be the first to shop new collections before they go live</p>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">🎁</span>
+                <div class="benefit-content">
+                    <h3>Special Offers</h3>
+                    <p>Subscriber-only discounts and seasonal promotions</p>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">📖</span>
+                <div class="benefit-content">
+                    <h3>Style Inspiration</h3>
+                    <p>Curated lookbooks and styling tips from our heritage experts</p>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">🧵</span>
+                <div class="benefit-content">
+                    <h3>Artisan Stories</h3>
+                    <p>Behind-the-scenes glimpses of our handcrafted weaves</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media -->
+        <div class="social-section">
+            <p class="social-title">Follow Our Journey</p>
+            <div class="social-icons">
+                <a href="https://instagram.com/aaavrti" class="social-icon" title="Instagram">📷</a>
+                <a href="https://facebook.com/aaavrti" class="social-icon" title="Facebook">📘</a>
+                <a href="https://twitter.com/aaavrti" class="social-icon" title="Twitter">🐦</a>
+                <a href="https://pinterest.com/aaavrti" class="social-icon" title="Pinterest">📌</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <img src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png"
+                alt="Aaavrti" class="footer-logo">
+            <p>© 2026 Aaavrti. All rights reserved.</p>
+            <p style="margin-top: 10px;">d/206 Jankalyan CHS, Mumbai, India</p>
+
+            <div class="footer-links">
+                <a href="https://aaavrti.shop">Shop</a> |
+                <a href="https://aaavrti.shop/about">About Us</a> |
+                <a href="https://aaavrti.shop/contact">Contact</a> |
+                <a href="https://aaavrti.shop/pages/privacy-policy">Privacy Policy</a>
+            </div>
+
+            <p style="margin-top: 20px; font-size: 11px; color: #666;">
+                You're receiving this email because you subscribed to Aaavrti newsletter.<br>
+                <a href="https://aaavrti.shop/unsubscribe">Unsubscribe</a> from our emails
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
