@@ -73,7 +73,7 @@ export const Product = models.Product || model('Product', ProductSchema);
 const ReviewSchema = new Schema({
   rating: { type: Number, required: true },
   comment: String,
-  userId: { type: Schema.Types.ObjectId, ref: 'User' },
+  userId: { type: String, ref: 'User' }, // Changed to String for NextAuth UUID compatibility
   productId: { type: String, ref: 'Product' }
 }, { timestamps: true });
 
@@ -81,7 +81,7 @@ export const Review = models.Review || model('Review', ReviewSchema);
 
 // --- Product View History ---
 const ProductViewSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: 'User' },
+  userId: { type: String, ref: 'User' }, // Changed to String for NextAuth UUID compatibility
   productId: { type: String, ref: 'Product' },
   viewedAt: { type: Date, default: Date.now }
 });

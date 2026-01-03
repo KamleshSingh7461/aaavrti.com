@@ -9,6 +9,7 @@ import { Heart, ShieldCheck, Truck, ArrowRight, ChevronDown, ChevronUp, Share2, 
 import { AddToCartButton } from './AddToCartButton';
 import { WishlistButton } from './WishlistButton';
 import { ProductOffers } from './ProductOffers';
+import { SizeGuideModal } from './SizeGuideModal';
 import { Cormorant_Garamond } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import {
@@ -71,6 +72,7 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
     const [activeImage, setActiveImage] = useState(initialImage);
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
+    const [showSizeGuide, setShowSizeGuide] = useState(false);
 
     // Initialize options with first available values
     useEffect(() => {
@@ -241,7 +243,14 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
                                         <span className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
                                             {key}: <span className="text-foreground">{selectedOptions[key]}</span>
                                         </span>
-                                        {isSize && <button className="text-xs underline text-muted-foreground hover:text-foreground">Size Guide</button>}
+                                        {isSize && (
+                                            <button
+                                                onClick={() => setShowSizeGuide(true)}
+                                                className="text-xs underline text-muted-foreground hover:text-foreground"
+                                            >
+                                                Size Guide
+                                            </button>
+                                        )}
                                     </div>
 
                                     <div className="flex flex-wrap gap-3">
@@ -385,6 +394,14 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
                     </div>
                 </FadeIn>
             </div>
+
+            {/* Size Guide Modal */}
+            {showSizeGuide && (
+                <SizeGuideModal
+                    category={product.category?.slug || 'sarees'}
+                    onClose={() => setShowSizeGuide(false)}
+                />
+            )}
         </div>
     );
 }
