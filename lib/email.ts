@@ -1,8 +1,15 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY
+    ? new Resend(process.env.RESEND_API_KEY)
+    : null;
 
 export async function sendVerificationEmail(email: string, otp: string) {
+    if (!resend) {
+        console.warn('RESEND_API_KEY is not set. Email not sent.');
+        return false;
+    }
+
     try {
         const { data, error } = await resend.emails.send({
             from: 'Aaavrti <onboarding@resend.dev>', // Use verified domain if available, else standard resend dev
