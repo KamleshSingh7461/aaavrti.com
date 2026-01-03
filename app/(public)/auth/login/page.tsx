@@ -1,13 +1,12 @@
 'use client';
 
 import { useActionState } from 'react';
-import { authenticateCustomer, registerUser } from '@/actions/auth-actions';
+import { authenticateCustomer } from '@/actions/auth-actions';
 import { Outfit } from 'next/font/google';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Mail, Lock } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
-import { useState } from 'react';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
@@ -32,93 +31,94 @@ function SubmitButton({ isSignUp }: { isSignUp: boolean }) {
 }
 
 export default function CustomerLoginPage() {
-    const [isSignUp, setIsSignUp] = useState(false);
     const [loginError, loginAction] = useActionState(authenticateCustomer, undefined);
-    const [signupError, signupAction] = useActionState(registerUser, undefined);
-
-    const errorMessage = isSignUp ? signupError : loginError;
-    const formAction = isSignUp ? signupAction : loginAction;
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center bg-background px-4">
-            <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="min-h-screen flex text-foreground">
+            {/* Left Side: Form */}
+            <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:w-[500px] xl:w-[600px] bg-background">
+                <div className="mx-auto w-full max-w-sm lg:max-w-md space-y-8 animate-in fade-in slide-in-from-left-8 duration-700">
 
-                <div className="text-center space-y-2">
-                    <h1 className={cn("text-3xl font-serif font-medium", outfit.className)}>
-                        {isSignUp ? 'Create Account' : 'Welcome Back'}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        {isSignUp ? 'Join us to access your curated collection.' : 'Sign in to access your curated collection.'}
-                    </p>
-                </div>
+                    <div className="space-y-2">
+                        <Link href="/" className={cn("text-2xl font-serif font-bold tracking-tighter", outfit.className)}>
+                            AAAVRTI
+                        </Link>
+                        <h1 className={cn("text-4xl font-serif font-medium mt-6", outfit.className)}>Welcome Back</h1>
+                        <p className="text-muted-foreground">Sign in to access your curated collection.</p>
+                    </div>
 
-                <form action={formAction} className="space-y-6">
-                    <div className="space-y-4">
-                        {isSignUp && (
+                    <form action={loginAction} className="space-y-5">
+                        <div className="space-y-4">
                             <div className="space-y-2">
-                                <label htmlFor="name" className="text-sm font-medium leading-none">Full Name</label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    name="name"
-                                    placeholder="Your name"
-                                    required
-                                    className="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                />
+                                <label htmlFor="email" className="text-sm font-medium leading-none">Email</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Mail className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        placeholder="you@example.com"
+                                        required
+                                        className="flex h-12 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                                    />
+                                </div>
                             </div>
-                        )}
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium leading-none">Email</label>
-                            <input
-                                id="email"
-                                type="email"
-                                name="email"
-                                placeholder="you@example.com"
-                                required
-                                className="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="text-sm font-medium">Password</label>
-                                {!isSignUp && (
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="password" className="text-sm font-medium">Password</label>
                                     <Link href="#" className="text-xs text-primary hover:underline">
                                         Forgot password?
                                     </Link>
-                                )}
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Lock className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        required
+                                        minLength={6}
+                                        className="flex h-12 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                                    />
+                                </div>
                             </div>
-                            <input
-                                id="password"
-                                type="password"
-                                name="password"
-                                required
-                                minLength={6}
-                                className="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                            {isSignUp && (
-                                <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
+                        </div>
+
+                        <div className="pt-2">
+                            <SubmitButton isSignUp={false} />
+                            {loginError && (
+                                <p className="mt-4 text-sm text-red-500 text-center bg-red-50 p-3 rounded-md border border-red-100 animate-in fade-in">{loginError}</p>
                             )}
                         </div>
-                    </div>
+                    </form>
 
-                    <div className="flex flex-col space-y-2">
-                        <SubmitButton isSignUp={isSignUp} />
-                        {errorMessage && errorMessage !== 'success' && (
-                            <p className="text-sm text-red-500 text-center">{errorMessage}</p>
-                        )}
-                        {errorMessage === 'success' && (
-                            <p className="text-sm text-green-500 text-center">Account created! Please sign in.</p>
-                        )}
+                    <div className="text-center text-sm text-muted-foreground">
+                        Don't have an account?{' '}
+                        <Link href="/auth/signup" className="text-primary font-semibold hover:underline">
+                            Create an account
+                        </Link>
                     </div>
-                </form>
+                </div>
+            </div>
 
-                <div className="text-center text-sm text-muted-foreground">
-                    <button
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-primary hover:underline font-medium"
-                    >
-                        {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-                    </button>
+            {/* Right Side: Image */}
+            <div className="hidden lg:block relative flex-1 bg-muted">
+                <div className="absolute inset-0 h-full w-full bg-zinc-900/10"></div>
+                <img
+                    className="absolute inset-0 h-full w-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0"
+                    src="https://images.unsplash.com/photo-1574291823908-16e75bd6d6db?q=80&w=2560&auto=format&fit=crop"
+                    alt="Fashion Editorial"
+                />
+                <div className="absolute bottom-10 left-10 p-10 z-10 text-white max-w-lg animate-in slide-in-from-bottom-10 duration-1000 delay-300">
+                    <p className="text-lg font-medium opacity-80 mb-2">New Arrivals</p>
+                    <h2 className={cn("text-5xl font-serif font-medium leading-tight", outfit.className)}>
+                        Discover the Art of Elegant Dressing
+                    </h2>
                 </div>
             </div>
         </div>
