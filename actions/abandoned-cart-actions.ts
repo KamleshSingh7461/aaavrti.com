@@ -3,7 +3,7 @@
 import dbConnect from '@/lib/db';
 import { Order } from '@/lib/models/Order';
 import { sendEmail } from '@/lib/email-service';
-import { cartRecoveryTemplate } from '@/lib/email-templates';
+import { cartRecoveryTemplate } from '@/lib/email-templates-cart-recovery';
 
 /**
  * Find abandoned carts (PENDING orders older than 1 hour, no recovery email sent)
