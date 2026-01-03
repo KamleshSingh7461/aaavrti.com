@@ -79,8 +79,8 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                     </div>
 
                     {/* Right: Icons/Actions */}
-                    <div className="flex items-center justify-end space-x-2 md:space-x-6">
-                        {/* Desktop Only Icons */}
+                    <div className="flex items-center justify-end space-x-3 md:space-x-6">
+                        {/* Desktop Only: Search + Language */}
                         <div className="hidden md:flex items-center space-x-6">
                             <LanguageToggle />
                             <button
@@ -90,11 +90,13 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                             >
                                 <Search className="h-5 w-5" />
                             </button>
-                            <CartIcon />
                         </div>
 
-                        {/* Profile/User Menu - Always Visible */}
-                        <UserMenu user={user} />
+                        {/* Shared: User (Account) & Cart - Visible on Mobile & Desktop */}
+                        <div className="flex items-center space-x-3 md:space-x-6">
+                            <UserMenu user={user} />
+                            <CartIcon />
+                        </div>
                     </div>
                 </div>
             </header>
