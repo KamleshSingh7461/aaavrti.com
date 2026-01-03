@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
         const result = await sendAbandonedCartEmails();
 
         return NextResponse.json({
-            success: true,
             ...result,
             timestamp: new Date().toISOString()
         });
