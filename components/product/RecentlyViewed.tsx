@@ -37,23 +37,14 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
             } else {
                 // If Guest: Fetch details using LocalStorage IDs
                 const localHistory = JSON.parse(localStorage.getItem('viewed_products') || '[]');
-                console.log("RecentlyViewed: Found guest history IDs:", localHistory);
                 if (localHistory.length > 0) {
                     try {
-                        console.log("RecentlyViewed: Fetching for IDs:", localHistory);
                         const fetchedProducts = await getProducts({ ids: localHistory });
-                        console.log("RecentlyViewed: Fetched products count:", fetchedProducts.length);
-
-                        if (fetchedProducts.length === 0) {
-                            console.warn("RecentlyViewed: IDs exist but no products returned. IDs might be invalid or deleted.");
-                        }
 
                         // Re-order to match history order (as $in doesn't guarantee order)
                         const orderedProducts = localHistory
                             .map((id: string) => fetchedProducts.find((p: any) => p.id === id))
                             .filter(Boolean);
-
-                        console.log("RecentlyViewed: Final ordered count:", orderedProducts.length);
                         setProducts(orderedProducts);
                     } catch (error) {
                         console.error("Failed to fetch guest history products", error);
@@ -67,7 +58,6 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
     }, [currentProductId, session]);
 
     if (loading || products.length === 0) {
-        console.log("RecentlyViewed: Loading or empty.", { loading, count: products.length });
         return null;
     }
 
@@ -75,9 +65,6 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
     const filteredProducts = products.filter(p => p.id !== currentProductId).slice(0, 4);
 
     if (filteredProducts.length === 0) {
-        console.log("RecentlyViewed: Filtered list empty.");
-        // Only show this during debug or if we want to confirm it's mounted
-        // return <div className="p-4 text-center border">Debug: No recently viewed items found.</div>;
         return null;
     }
 
