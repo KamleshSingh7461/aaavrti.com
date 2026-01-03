@@ -155,12 +155,13 @@ export async function registerUser(prevState: string | undefined, formData: Form
         }
 
         // Redirect directly from server action
-        redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
-
+        // redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
     } catch (error) {
         console.error('Registration Error:', error);
         return 'Database Error: Failed to Register.';
     }
+
+    redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
 }
 
 export async function verifyOtp(email: string, otp: string) {
