@@ -465,7 +465,8 @@ function AddressForm({ onSave, onCancel, loading }: any) {
 
         if (res.success) {
             setPincodeStatus('valid');
-            setPincodeMsg('Delivery available');
+            const etdDate = res.etd ? new Date(res.etd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '5-7 days';
+            setPincodeMsg(`Delivery available by ${etdDate}`);
             if (res.city) setCity(res.city);
             if (res.state) setState(res.state);
         } else {
@@ -493,9 +494,22 @@ function AddressForm({ onSave, onCancel, loading }: any) {
                 />
                 <input
                     type="text"
-                    name="street"
-                    placeholder="Street Address"
+                    name="houseNo"
+                    placeholder="House No / Building Name"
                     required
+                    className="col-span-2 bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <input
+                    type="text"
+                    name="street"
+                    placeholder="Street / Area / Colony"
+                    required
+                    className="col-span-2 bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <input
+                    type="text"
+                    name="landmark"
+                    placeholder="Landmark (Optional)"
                     className="col-span-2 bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <input
@@ -526,7 +540,6 @@ function AddressForm({ onSave, onCancel, loading }: any) {
                         onBlur={handlePincodeBlur}
                         onChange={(e) => {
                             if (pincodeStatus !== 'idle') setPincodeStatus('idle');
-                            // Only allow numbers
                             e.target.value = e.target.value.replace(/[^0-9]/g, '');
                         }}
                         className={cn(
@@ -536,7 +549,12 @@ function AddressForm({ onSave, onCancel, loading }: any) {
                         )}
                     />
                     {pincodeStatus === 'checking' && <p className="text-xs text-muted-foreground">Checking availability...</p>}
-                    {pincodeStatus === 'valid' && <p className="text-xs text-green-600">{pincodeMsg}</p>}
+                    {pincodeStatus === 'valid' && (
+                        <div className="text-xs text-green-600 space-y-0.5">
+                            <p className="font-medium">{pincodeMsg}</p>
+                            <p className="text-muted-foreground">Dispatches in 24-48 hours</p>
+                        </div>
+                    )}
                     {pincodeStatus === 'invalid' && <p className="text-xs text-red-600">{pincodeMsg}</p>}
                 </div>
             </div>

@@ -9,6 +9,8 @@ const AddressSchema = new Schema({
   city: { type: String, required: true },
   state: { type: String, required: true },
   postalCode: { type: String, required: true },
+  houseNo: { type: String },
+  landmark: { type: String },
   country: { type: String, default: "IN" },
   phone: { type: String, required: true },
   userId: { type: String, ref: 'User' }
