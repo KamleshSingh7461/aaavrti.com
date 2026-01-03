@@ -17,13 +17,16 @@ const cormorant = Cormorant_Garamond({
 
 interface MobileNavProps {
     categories: CategoryWithChildren[];
+    user?: any;
 }
 
-export function MobileNav({ categories }: MobileNavProps) {
+export function MobileNav({ categories, user }: MobileNavProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     // Filter top-level categories
     const mainCategories = categories.filter(c => c.slug !== 'new-arrival' && c.slug !== 'offers');
+
+    const isLoggedIn = !!user;
 
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -110,8 +113,14 @@ export function MobileNav({ categories }: MobileNavProps) {
                 {/* Footer Links */}
                 <div className="mt-auto border-t border-border/50 p-6 bg-secondary/10">
                     <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                        <Link href="/account" onClick={() => setIsOpen(false)}>My Account</Link>
-                        <Link href="/account/orders" onClick={() => setIsOpen(false)}>Orders</Link>
+                        {isLoggedIn ? (
+                            <>
+                                <Link href="/account" onClick={() => setIsOpen(false)}>My Account</Link>
+                                <Link href="/account/orders" onClick={() => setIsOpen(false)}>Orders</Link>
+                            </>
+                        ) : (
+                            <Link href="/auth/login" onClick={() => setIsOpen(false)}>Login / Register</Link>
+                        )}
                         <Link href="/contact" onClick={() => setIsOpen(false)}>Contact Us</Link>
                         <Link href="/faq" onClick={() => setIsOpen(false)}>FAQs</Link>
                     </div>
