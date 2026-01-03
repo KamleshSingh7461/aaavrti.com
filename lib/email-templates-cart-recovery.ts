@@ -1,4 +1,5 @@
 // Add this to the existing email-templates.ts file
+import { baseTemplate } from './email-templates';
 
 export const cartRecoveryTemplate = (order: any, restoreLink: string) => {
     const itemsHtml = order.items.slice(0, 4).map((item: any) => {
