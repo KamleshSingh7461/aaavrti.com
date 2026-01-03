@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 import { auth } from '@/auth';
 
 import Script from 'next/script';
+import { ConsentBanner } from '@/components/privacy/ConsentBanner';
 
 export default async function RootLayout({
   children,
@@ -46,13 +47,19 @@ export default async function RootLayout({
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'ad_user_data': 'denied',
+              'ad_personalization': 'denied',
+              'analytics_storage': 'denied'
+            });
             gtag('js', new Date());
-
             gtag('config', 'G-7CNEJFGTMT');
           `}
         </Script>
         <Providers session={session}>
           {children}
+          <ConsentBanner />
         </Providers>
       </body>
     </html>
