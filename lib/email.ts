@@ -12,7 +12,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'Aaavrti <onboarding@resend.dev>', // Use verified domain if available, else standard resend dev
+            from: 'Aaavrti <no-reply@aaavrti.shop>',
             to: [email],
             subject: 'Verify your Aaavrti Account',
             html: `
