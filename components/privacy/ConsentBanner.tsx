@@ -46,7 +46,7 @@ export function ConsentBanner() {
     if (!showBanner) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-50 shadow-lg animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-40 shadow-lg animate-in slide-in-from-bottom-5">
             <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="text-sm text-muted-foreground text-center md:text-left">
                     <p>
