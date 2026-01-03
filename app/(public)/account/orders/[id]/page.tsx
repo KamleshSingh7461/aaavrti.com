@@ -5,7 +5,7 @@ import { Order, ReturnRequest } from '@/lib/models/Order';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Clock, MapPin, Package, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Package, RotateCcw, FileText } from 'lucide-react';
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -80,7 +80,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
                 <div>
                     <h1 className="text-3xl font-serif font-medium mb-2">Order #{order.orderNumber.slice(0, 8)}</h1>
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-4">
                         <Clock className="h-4 w-4" />
                         <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                         <span className="mx-2">•</span>
@@ -90,6 +90,13 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                             {order.status}
                         </span>
                     </div>
+                    <Link
+                        href={`/account/orders/${orderId}/invoice`}
+                        target="_blank"
+                        className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                        <Package className="h-3 w-3" /> Download Invoice
+                    </Link>
                 </div>
 
                 {canCancel && (
