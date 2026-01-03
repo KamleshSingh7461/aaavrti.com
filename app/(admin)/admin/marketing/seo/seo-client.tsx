@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { PageMetaDTO, upsertPageMetadata, deletePageMetadata, trackSEORanking } from '@/actions/seo-actions';
 import { useRouter } from 'next/navigation';
