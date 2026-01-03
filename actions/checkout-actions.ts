@@ -163,7 +163,11 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
         for (const item of items) {
             const productId = item.productId || item.id;
 
-            const product = await Product.findById(productId).session(sessionTransaction);
+            let query: any = { _id: productId };
+            if (mongoose.isValidObjectId(productId)) {
+                query = { $or: [{ _id: productId }, { _id: new mongoose.Types.ObjectId(productId) }] };
+            }
+            const product = await Product.findOne(query).session(sessionTransaction);
 
             if (!product) throw new Error(`Product not found: ${item.id}`);
 
@@ -227,7 +231,11 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
 
         // 3. DECREMENT STOCK
         for (const item of realItems) {
-            const product = await Product.findById(item.productId).session(sessionTransaction);
+            let query: any = { _id: item.productId };
+            if (mongoose.isValidObjectId(item.productId)) {
+                query = { $or: [{ _id: item.productId }, { _id: new mongoose.Types.ObjectId(item.productId) }] };
+            }
+            const product = await Product.findOne(query).session(sessionTransaction);
             if (!product) throw new Error("Product unavailable");
 
             if (product.variants && product.variants.length > 0) {
