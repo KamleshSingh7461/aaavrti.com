@@ -21,6 +21,25 @@ const cormorant = Cormorant_Garamond({
   weight: ['300', '400', '500', '600', '700']
 });
 
+
+import { getMetadataForPath } from "@/actions/seo-actions";
+import { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getMetadataForPath('/');
+  if (seo) {
+    return {
+      title: seo.title,
+      description: seo.description,
+      keywords: seo.keywords?.split(','),
+      openGraph: {
+        images: seo.ogImage ? [seo.ogImage] : undefined
+      }
+    };
+  }
+  return {}; // Fallback to layout metadata
+}
+
 export default async function Home() {
   const categoriesFn = getCategories();
   const bannersFn = getActiveBanners();

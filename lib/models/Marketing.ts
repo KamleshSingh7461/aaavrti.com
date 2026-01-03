@@ -79,4 +79,18 @@ const SEOTrackingSchema = new Schema({
 
 SEOTrackingSchema.index({ keyword: 1, date: 1 });
 
+
 export const SEOTracking = models.SEOTracking || model('SEOTracking', SEOTrackingSchema);
+
+
+// --- Page Metadata (Dynamic SEO) ---
+const PageMetadataSchema = new Schema({
+    path: { type: String, required: true, unique: true }, // e.g. '/', '/shop', '/about'
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    keywords: { type: String }, // Comma separated
+    ogImage: { type: String },
+    isSystem: { type: Boolean, default: false } // If true, prevent deletion of path
+}, { timestamps: true });
+
+export const PageMetadata = models.PageMetadata || model('PageMetadata', PageMetadataSchema);
