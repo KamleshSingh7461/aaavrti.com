@@ -13,10 +13,17 @@ const navItems = [
     { href: '/admin/orders/abandoned', label: 'Abandoned', icon: ShoppingCart },
     { href: '/admin/products', label: 'Products', icon: Package },
     { href: '/admin/inventory', label: 'Inventory', icon: ClipboardList },
-    { href: '/admin/marketing/banners', label: 'Banners', icon: Megaphone },
-    { href: '/admin/marketing/newsletter', label: 'Newsletter', icon: Megaphone }, // Use explicit icon if available, or duplicate match
-    { href: '/admin/marketing/coupons', label: 'Marketing Coupons', icon: Tag },
-    { href: '/admin/marketing/attribution', label: 'Attribution', icon: BarChart3 },
+    {
+        label: 'Marketing',
+        icon: Megaphone,
+        children: [
+            { href: '/admin/marketing/banners', label: 'Banners', icon: Megaphone },
+            { href: '/admin/marketing/newsletter', label: 'Newsletter', icon: Send },
+            { href: '/admin/marketing/coupons', label: 'Coupons', icon: Tag },
+            { href: '/admin/marketing/attribution', label: 'Attribution', icon: BarChart3 },
+            { href: '/admin/marketing/seo', label: 'SEO', icon: Search },
+        ]
+    },
     { href: '/admin/attributes', label: 'Attributes', icon: Palette },
     { href: '/admin/categories', label: 'Categories', icon: Tags },
     { href: '/admin/customers', label: 'Customers', icon: Users },
