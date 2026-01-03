@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Trigger restart
+// Trigger restart 2
 
 const nextConfig: NextConfig = {
   images: {

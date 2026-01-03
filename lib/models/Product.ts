@@ -39,7 +39,7 @@ export const Attribute = models.Attribute || model('Attribute', AttributeSchema)
 // --- Product ---
 const ProductSchema = new Schema({
   // Mongoose will default to ObjectId which matches the database
-  _id: { type: String },
+  _id: { type: Schema.Types.Mixed },
   name_en: { type: String, required: true },
   name_hi: { type: String },
   slug: { type: String, unique: true, required: true },
