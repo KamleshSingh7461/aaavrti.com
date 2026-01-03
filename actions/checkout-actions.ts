@@ -17,11 +17,32 @@ import { ShiprocketService } from '@/lib/services/shiprocket';
 
 export async function verifyPincode(pincode: string) {
     try {
+        // 1. Check Serviceability via Shiprocket
         const service = new ShiprocketService();
-        // Auth handled internally by checkServiceability with env vars
-        // await service.authenticate();
-        const result = await service.checkServiceability(pincode);
-        return { success: true, data: result };
+        // Auth handled internally
+        const serviceResult = await service.checkServiceability(pincode);
+
+        // 2. Fetch City/State details
+        let city = '';
+        let state = '';
+        try {
+            const geoRes = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            const geoData = await geoRes.json();
+            if (geoData?.[0]?.Status === 'Success') {
+                const details = geoData[0].PostOffice[0];
+                city = details.District;
+                state = details.State;
+            }
+        } catch (e) {
+            console.error('Failed to fetch city/state:', e);
+        }
+
+        return {
+            success: true,
+            data: serviceResult,
+            city,
+            state
+        };
     } catch (error: any) {
         console.error('Pincode verification failed:', error);
         return { error: error.message || 'Failed to verify pincode' };
