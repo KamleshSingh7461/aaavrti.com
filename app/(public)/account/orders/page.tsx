@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Cormorant_Garamond } from 'next/font/google';
 import { cn } from '@/lib/utils';
-import { Package, ChevronRight, Clock, AlertCircle } from 'lucide-react';
+import { Package, ChevronRight, Clock, AlertCircle, FileText } from 'lucide-react';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/motion';
 
 const cormorant = Cormorant_Garamond({
@@ -58,39 +58,39 @@ export default async function OrdersPage() {
             <StaggerContainer className="space-y-4">
                 {orders.map((order) => (
                     <StaggerItem key={order.id}>
-                        <Link
-                            href={`/account/orders/${order.id}`}
+                        <div
                             className="group block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all shadow-sm hover:shadow-md"
                         >
                             <div className="p-6">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-medium text-lg">{order.displayId}</span>
-                                            <span className={cn(
-                                                "px-2.5 py-0.5 rounded-full text-xs font-medium border",
-                                                order.status === 'DELIVERED' ? "bg-green-50 text-green-700 border-green-200" :
-                                                    order.status === 'CONFIRMED' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                                        order.status === 'CANCELLED' ? "bg-red-50 text-red-700 border-red-200" :
-                                                            "bg-secondary text-secondary-foreground border-border"
-                                            )}>
-                                                {order.status}
-                                            </span>
+                                <Link href={`/account/orders/${order.id}`} className="block">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-medium text-lg">{order.displayId}</span>
+                                                <span className={cn(
+                                                    "px-2.5 py-0.5 rounded-full text-xs font-medium border",
+                                                    order.status === 'DELIVERED' ? "bg-green-50 text-green-700 border-green-200" :
+                                                        order.status === 'CONFIRMED' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                                            order.status === 'CANCELLED' ? "bg-red-50 text-red-700 border-red-200" :
+                                                                "bg-secondary text-secondary-foreground border-border"
+                                                )}>
+                                                    {order.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center text-sm text-muted-foreground gap-2">
+                                                <Clock className="h-3.5 w-3.5" />
+                                                {order.date}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center text-sm text-muted-foreground gap-2">
-                                            <Clock className="h-3.5 w-3.5" />
-                                            {order.date}
+                                        <div className="text-right">
+                                            <p className="text-sm text-muted-foreground">Total Amount</p>
+                                            <p className="text-lg font-medium">₹{order.total.toLocaleString('en-IN')}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-muted-foreground">Total Amount</p>
-                                        <p className="text-lg font-medium">₹{order.total.toLocaleString('en-IN')}</p>
-                                    </div>
-                                </div>
+                                </Link>
 
                                 <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        {/* Product Images Preview */}
+                                    <Link href={`/account/orders/${order.id}`} className="flex items-center gap-3 overflow-hidden">
                                         <div className="flex -space-x-2">
                                             {order.items.slice(0, 4).map((item, i) => (
                                                 <div key={i} className="relative h-10 w-10 rounded-full border-2 border-background overflow-hidden bg-secondary">
@@ -115,14 +115,26 @@ export default async function OrdersPage() {
                                         <span className="text-sm text-muted-foreground pl-2">
                                             {order.items.length} Item{order.items.length !== 1 ? 's' : ''}
                                         </span>
-                                    </div>
+                                    </Link>
 
-                                    <div className="flex items-center text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
-                                        View Details <ChevronRight className="h-4 w-4 ml-1" />
+                                    <div className="flex items-center gap-4">
+                                        <Link
+                                            href={`/account/orders/${order.id}/invoice`}
+                                            target="_blank"
+                                            className="text-sm font-medium text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors"
+                                        >
+                                            <FileText className="h-4 w-4" /> Invoice
+                                        </Link>
+                                        <Link
+                                            href={`/account/orders/${order.id}`}
+                                            className="flex items-center text-sm font-medium text-primary group-hover:translate-x-1 transition-transform"
+                                        >
+                                            View Details <ChevronRight className="h-4 w-4 ml-1" />
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
-                        </Link>
+                        </div>
                     </StaggerItem>
                 ))}
             </StaggerContainer>
