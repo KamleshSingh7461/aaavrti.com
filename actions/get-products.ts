@@ -46,7 +46,12 @@ export async function getProducts(filter?: { categoryId?: string; featured?: boo
         }
 
         if (filter?.ids && filter.ids.length > 0) {
-            query._id = { $in: filter.ids };
+            const safeIds = filter.ids.map(id => {
+                if (mongoose.isValidObjectId(id)) return new mongoose.Types.ObjectId(id);
+                return id;
+            });
+            // Query for both String and ObjectId versions to be safe with Mixed schema
+            query._id = { $in: [...filter.ids, ...safeIds] };
         }
 
         if (filter?.featured) query.featured = true;
