@@ -1,10 +1,11 @@
 
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { registerUser } from '@/actions/auth-actions';
 import { Outfit } from 'next/font/google';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
@@ -33,6 +34,14 @@ function SubmitButton() {
 
 export default function SignupPage() {
     const [state, formAction] = useActionState(registerUser, undefined);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (state && state.startsWith('verify|')) {
+            const email = state.split('|')[1];
+            router.push(`/auth/verify?email=${email}`);
+        }
+    }, [state, router]);
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center bg-background px-4">
