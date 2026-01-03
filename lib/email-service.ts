@@ -13,7 +13,7 @@ const smtpConfig = {
 const transporter = nodemailer.createTransport(smtpConfig);
 
 // Email Categories
-export type EmailCategory = 'OTP' | 'WELCOME' | 'ORDER' | 'NEWSLETTER' | 'ALERT';
+export type EmailCategory = 'OTP' | 'WELCOME' | 'ORDER' | 'NEWSLETTER' | 'ALERT' | 'CART_RECOVERY' | 'SHIPPING' | 'SUPPORT' | 'MARKETING';
 
 interface SenderIdentity {
     name: string;
