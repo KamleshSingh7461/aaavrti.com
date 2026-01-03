@@ -49,13 +49,23 @@ export function HeaderClient({ categories, user }: HeaderProps) {
 
     return (
         <>
-            <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/95 backdrop-blur-xl">
-                <div className="container mx-auto px-6 h-20 flex items-center justify-between gap-4">
-                    {/* Mobile Menu */}
-                    <MobileNav categories={categories} user={user} />
+            <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/95 backdrop-blur-xl transition-all duration-300">
+                <div className="container mx-auto px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+                    {/* Left: Mobile Trigger (Mobile) + Navigation (Desktop) */}
+                    <div className="flex items-center justify-start gap-6">
+                        {/* Mobile Menu Trigger */}
+                        <div className="md:hidden">
+                            <MobileNav categories={categories} user={user} />
+                        </div>
 
-                    {/* Logo - Pushed Left on Mobile, Left/Center on Desktop */}
-                    <div className="flex-shrink-0">
+                        {/* Desktop Navigation - Hidden on Mobile */}
+                        <div className="hidden md:block">
+                            <CategoryNav categories={categories} />
+                        </div>
+                    </div>
+
+                    {/* Center: Logo */}
+                    <div className="flex justify-center">
                         <Link href="/">
                             <Image
                                 src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png"
@@ -68,13 +78,8 @@ export function HeaderClient({ categories, user }: HeaderProps) {
                         </Link>
                     </div>
 
-                    {/* Navigation - Centered (Desktop Only) */}
-                    <div className="hidden md:flex flex-1 px-12 justify-center">
-                        <CategoryNav categories={categories} />
-                    </div>
-
-                    {/* Icons/Actions */}
-                    <div className="flex items-center space-x-2 md:space-x-6">
+                    {/* Right: Icons/Actions */}
+                    <div className="flex items-center justify-end space-x-2 md:space-x-6">
                         {/* Desktop Only Icons */}
                         <div className="hidden md:flex items-center space-x-6">
                             <LanguageToggle />
@@ -90,9 +95,6 @@ export function HeaderClient({ categories, user }: HeaderProps) {
 
                         {/* Profile/User Menu - Always Visible */}
                         <UserMenu user={user} />
-
-                        {/* Mobile Search - Just an icon if needed, but we have bottom nav? */}
-                        {/* Actually, the prompt said logo and profile button in top bar. */}
                     </div>
                 </div>
             </header>

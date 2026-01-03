@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription, SheetHeader } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronRight } from "lucide-react";
+import { Menu, ChevronRight, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
@@ -43,89 +43,67 @@ export function MobileNav({ categories, user }: MobileNavProps) {
                 </SheetHeader>
 
                 {/* Scrollable Container */}
-                <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col">
-                    {/* Header */}
-                    <div className="p-6 border-b border-border/50 shrink-0">
-                        <Link href="/" onClick={() => setIsOpen(false)} className="block w-32 relative h-10">
-                            <Image
-                                src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png"
-                                alt="Aaavrti"
-                                fill
-                                className="object-contain object-left"
-                                priority
-                            />
-                        </Link>
+                <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col p-6">
+                    {/* Search Bar - Top */}
+                    <div className="mb-8 relative">
+                        <input
+                            type="text"
+                            placeholder="Search your fashion store"
+                            className="w-full h-12 border-b border-black/20 text-lg placeholder:text-black/40 focus:outline-none focus:border-black transition-colors rounded-none bg-transparent"
+                            onClick={() => {
+                                // Optional: trigger search modal if we want full search UI, or just keep as simple input
+                            }}
+                        />
+                        <Search className="absolute right-0 top-3 h-6 w-6 text-black/40" />
                     </div>
 
-                    {/* Menu Items */}
-                    <div className="flex flex-col py-4">
+                    {/* Menu Items - Clean Text List */}
+                    <div className="flex flex-col space-y-6">
                         <Link
                             href="/new/arrival"
                             onClick={() => setIsOpen(false)}
-                            className="px-6 py-4 text-lg font-medium hover:bg-secondary/30 transition-colors flex items-center justify-between"
+                            className={cn("text-2xl uppercase tracking-widest font-light text-black hover:opacity-60 transition-opacity", cormorant.className)}
                         >
-                            <span className={cormorant.className}>New Arrivals</span>
-                            <ChevronRight className="h-4 w-4 opacity-50" />
+                            New In
                         </Link>
 
                         {mainCategories.map((category) => (
-                            <div key={category.id} className="flex flex-col">
-                                <Link
-                                    href={`/category/${category.slug}`}
-                                    onClick={() => setIsOpen(false)}
-                                    className="px-6 py-4 text-lg font-medium hover:bg-secondary/30 transition-colors flex items-center justify-between border-t border-border/30"
-                                >
-                                    <span className={cormorant.className}>{category.name_en}</span>
-                                    <ChevronRight className="h-4 w-4 opacity-50" />
-                                </Link>
-                                {/* Subcategories (Simple list for now) */}
-                                {category.children && category.children.length > 0 && (
-                                    <div className="bg-secondary/10 px-6 py-2 pb-4 space-y-3">
-                                        {category.children.slice(0, 5).map(child => (
-                                            <Link
-                                                key={child.id}
-                                                href={`/category/${category.slug}/${child.slug}`}
-                                                onClick={() => setIsOpen(false)}
-                                                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                                            >
-                                                {child.name_en}
-                                            </Link>
-                                        ))}
-                                        <Link
-                                            href={`/category/${category.slug}`}
-                                            onClick={() => setIsOpen(false)}
-                                            className="block text-xs font-bold uppercase tracking-widest text-primary mt-2"
-                                        >
-                                            View All {category.name_en}
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
+                            <Link
+                                key={category.id}
+                                href={`/category/${category.slug}`}
+                                onClick={() => setIsOpen(false)}
+                                className={cn("text-2xl uppercase tracking-widest font-light text-black hover:opacity-60 transition-opacity", cormorant.className)}
+                            >
+                                {category.name_en}
+                            </Link>
                         ))}
 
                         <Link
                             href="/offers"
                             onClick={() => setIsOpen(false)}
-                            className="px-6 py-4 text-lg font-medium hover:bg-secondary/30 transition-colors flex items-center justify-between border-t border-border/30 text-rose-600"
+                            className={cn("text-2xl uppercase tracking-widest font-light text-rose-600 hover:opacity-60 transition-opacity", cormorant.className)}
                         >
-                            <span className={cormorant.className}>Offers & Sale</span>
-                            <ChevronRight className="h-4 w-4 opacity-50" />
+                            Sale
                         </Link>
                     </div>
 
-                    {/* Footer Links - Pushed to bottom of scroll view if content is short */}
-                    <div className="mt-auto border-t border-border/50 p-6 bg-secondary/10 shrink-0">
-                        <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                            {isLoggedIn ? (
-                                <>
-                                    <Link href="/account" onClick={() => setIsOpen(false)}>My Account</Link>
-                                    <Link href="/account/orders" onClick={() => setIsOpen(false)}>Orders</Link>
-                                </>
-                            ) : (
-                                <Link href="/auth/login" onClick={() => setIsOpen(false)}>Login / Register</Link>
-                            )}
-                            <Link href="/contact" onClick={() => setIsOpen(false)}>Contact Us</Link>
-                            <Link href="/faq" onClick={() => setIsOpen(false)}>FAQs</Link>
+                    {/* Bottom Actions - Pinned to bottom of content or pushed down */}
+                    <div className="mt-auto pt-12 space-y-4">
+                        {isLoggedIn ? (
+                            <Link href="/account" onClick={() => setIsOpen(false)} className="flex items-center gap-3 text-sm uppercase tracking-wider font-medium opacity-70">
+                                <User className="h-5 w-5" />
+                                My Account
+                            </Link>
+                        ) : (
+                            <Link href="/auth/login" onClick={() => setIsOpen(false)} className="flex items-center gap-3 text-sm uppercase tracking-wider font-medium opacity-70">
+                                <User className="h-5 w-5" />
+                                Log In
+                            </Link>
+                        )}
+                        <div className="flex gap-6 pt-4 border-t border-black/10">
+                            <Link href="/contact" onClick={() => setIsOpen(false)} className="text-xs text-black/50">Contact</Link>
+                            <Link href="/faq" onClick={() => setIsOpen(false)} className="text-xs text-black/50">FAQs</Link>
+                            <Link href="/track-order" onClick={() => setIsOpen(false)} className="text-xs text-black/50">Track Order</Link>
                         </div>
                     </div>
                 </div>
