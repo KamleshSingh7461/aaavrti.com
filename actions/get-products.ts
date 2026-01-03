@@ -62,9 +62,12 @@ export async function getProducts(filter?: { categoryId?: string; featured?: boo
 export async function getProductById(id: string): Promise<ProductType | undefined> {
     try {
         await dbConnect();
+        console.log(`[getProductById] Fetching product: ${id}`);
         const p = await Product.findById(id).populate('categoryId').lean();
+        console.log(`[getProductById] Result:`, p ? 'Found' : 'Not Found');
         return p ? serialize(p) : undefined;
     } catch (e) {
+        console.error(`[getProductById] Error fetching ${id}:`, e);
         return undefined;
     }
 }
