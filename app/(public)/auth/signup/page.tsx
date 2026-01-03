@@ -34,14 +34,8 @@ function SubmitButton() {
 
 export default function SignupPage() {
     const [state, formAction] = useActionState(registerUser, undefined);
-    const router = useRouter();
-
-    useEffect(() => {
-        if (state && state.startsWith('verify|')) {
-            const email = state.split('|')[1];
-            router.push(`/auth/verify?email=${email}`);
-        }
-    }, [state, router]);
+    // Redirect handled by server action
+    // useEffect(() => { ... }, []);
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center bg-background px-4">
