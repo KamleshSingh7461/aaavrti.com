@@ -46,7 +46,7 @@ export function MinimalProductGrid({ title, products, viewAllLink }: MinimalGrid
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 gap-x-6">
                 {displayProducts.map((product) => (
-                    <Link key={product._id.toString()} href={`/product/${product.slug}`} className="group block">
+                    <Link key={product.id} href={`/product/${product.slug}`} className="group block">
                         <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
                             {product.images?.[0] ? (
                                 <Image
