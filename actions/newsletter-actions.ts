@@ -142,6 +142,22 @@ export async function sendNewsletter(subject: string, htmlContent: string) {
         const { sendEmail } = await import('@/lib/email-service');
         const { newsletterTemplate } = await import('@/lib/email-templates');
 
+        // Helper to auto-append UTMs
+        const appendUTM = (html: string) => {
+            const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const utmParams = `utm_source=newsletter&utm_medium=email&utm_campaign=newsletter_${dateStr}`;
+
+            // Regex to find hrefs in <a> tags, ignoring anchors (#) and mailto:
+            return html.replace(/href=["']([^"']+)["']/g, (match, url) => {
+                if (url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('tel:')) return match;
+
+                const separator = url.includes('?') ? '&' : '?';
+                return `href="${url}${separator}${utmParams}"`;
+            });
+        };
+
+        const trackedHtmlContent = appendUTM(htmlContent);
+
         await dbConnect();
         const subscribers = await NewsletterSubscriber.find({ isActive: true }).select('email');
 
