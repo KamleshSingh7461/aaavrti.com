@@ -39,6 +39,7 @@ export function ProductForm({ product, categories, attributes, onClose, onSucces
     const [description_hi, setDescriptionHi] = useState(product?.description_hi || '');
     const [categoryId, setCategoryId] = useState(product?.category.id || '');
     const [price, setPrice] = useState(product?.price.toString() || '');
+    const [compareAtPrice, setCompareAtPrice] = useState(product?.compareAtPrice?.toString() || '');
     const [stock, setStock] = useState(product?.stock.toString() || '0');
     const [sku, setSku] = useState(product?.sku || '');
     const [status, setStatus] = useState(product?.status || 'DRAFT');
@@ -121,6 +122,7 @@ export function ProductForm({ product, categories, attributes, onClose, onSucces
         formData.append('description_hi', description_hi || '');
         formData.append('categoryId', categoryId);
         formData.append('price', price);
+        formData.append('compareAtPrice', compareAtPrice);
         formData.append('stock', stock);
         formData.append('sku', sku);
         formData.append('status', status);
@@ -253,10 +255,14 @@ export function ProductForm({ product, categories, attributes, onClose, onSucces
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Price (₹) <span className="text-red-500">*</span></label>
                                     <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-background focus:ring-2 focus:ring-primary outline-none" min="0" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">MRP / Compare At</label>
+                                    <input type="number" value={compareAtPrice} onChange={e => setCompareAtPrice(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-background focus:ring-2 focus:ring-primary outline-none" min="0" placeholder="e.g. 5000" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Base Stock</label>

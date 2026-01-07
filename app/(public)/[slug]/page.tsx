@@ -33,7 +33,7 @@ export default async function BannerLinkPage({ params }: { params: Promise<{ slu
         .lean();
 
     // Fetch categories for filter
-    const categories = await getCategories();
+    const categories = await getCategories({ publicOnly: true });
 
     // Use serialize utility for consistent data handling
     const serializedProducts = serialize(products);

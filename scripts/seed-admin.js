@@ -31,7 +31,7 @@ async function seedAdmin() {
         await mongoose.connect(MONGODB_URI);
         console.log('✅ Connected');
 
-        const adminEmail = 'admin@aaavrti.com';
+        const adminEmail = 'admin@ournika.com';
         const existingAdmin = await User.findOne({ email: adminEmail });
 
         if (existingAdmin) {
@@ -47,13 +47,13 @@ async function seedAdmin() {
             await User.create({
                 email: adminEmail,
                 password: hashedPassword,
-                name: 'Aaavrti Admin',
+                name: 'Ournika Admin',
                 role: 'ADMIN',
                 phone: '9999999999',
                 emailVerified: new Date()
             });
             console.log('✅ Created Admin User:');
-            console.log('   Email: admin@aaavrti.com');
+            console.log('   Email: admin@ournika.com');
             console.log('   Password: password123');
         }
 

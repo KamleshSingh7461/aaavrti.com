@@ -6,7 +6,7 @@ import { FadeIn } from '@/components/ui/motion';
 import { Tag, Clock, ArrowRight } from 'lucide-react';
 
 export const metadata = {
-    title: 'Special Offers | Aaavrti',
+    title: 'Special Offers | Ournika',
     description: 'Discover our latest deals and special offers on authentic Indian wear.'
 };
 

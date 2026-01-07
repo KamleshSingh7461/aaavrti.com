@@ -30,6 +30,8 @@ export interface ProductFiltersProps {
     sizes?: string[];
     selectedSizes?: string[];
     onSizeChange?: (sizes: string[]) => void;
+    minRating?: number;
+    onRatingChange?: (rating: number | undefined) => void;
     isOpen: boolean;
     onClose: () => void;
 }
@@ -52,6 +54,8 @@ export function ProductFilters({
     sizes = [],
     selectedSizes = [],
     onSizeChange,
+    minRating,
+    onRatingChange,
     isOpen,
     onClose
 }: ProductFiltersProps) {
@@ -61,13 +65,15 @@ export function ProductFilters({
         onPriceChange([minPrice, maxPrice]);
         onStockFilterChange(false);
         onOffersFilterChange(false);
+        onOffersFilterChange(false);
+        onRatingChange?.(undefined);
         onColorChange?.([]);
         onSizeChange?.([]);
     };
 
     const hasActiveFilters = selectedCategory || showInStockOnly || showOffersOnly ||
         (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) ||
-        selectedColors.length > 0 || selectedSizes.length > 0;
+        selectedColors.length > 0 || selectedSizes.length > 0 || minRating;
 
     const filterFooter = (
         <div className="p-6 flex gap-4">
@@ -309,6 +315,51 @@ export function ProductFilters({
                                     </AccordionContent>
                                 </AccordionItem>
                             )}
+                            <div className="h-px bg-border/20" />
+
+                            {/* Rating */}
+                            <AccordionItem value="rating" className="border-b-0">
+                                <AccordionTrigger className="text-sm font-medium uppercase tracking-wider text-muted-foreground hover:no-underline py-4">
+                                    Rating
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-3 pb-4">
+                                        {[4, 3, 2, 1].map((rating) => (
+                                            <button
+                                                key={rating}
+                                                onClick={() => onRatingChange?.(minRating === rating ? undefined : rating)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between group",
+                                                    minRating === rating ? "text-primary font-medium" : "text-muted-foreground"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-1.5">
+                                                    <Checkbox
+                                                        checked={minRating === rating}
+                                                        onCheckedChange={() => onRatingChange?.(minRating === rating ? undefined : rating)}
+                                                        className="h-4 w-4 rounded-none"
+                                                    />
+                                                    <div className="flex items-center mb-0.5">
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <svg
+                                                                key={i}
+                                                                className={cn(
+                                                                    "w-3.5 h-3.5",
+                                                                    i < rating ? "fill-current" : "fill-muted text-muted/20"
+                                                                )}
+                                                                viewBox="0 0 20 20"
+                                                            >
+                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                            </svg>
+                                                        ))}
+                                                        <span className="text-xs ml-2 text-muted-foreground/80">& Up</span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
                         </Accordion>
 
                         <div className="h-px bg-border/20" />
@@ -318,6 +369,6 @@ export function ProductFilters({
                     </div>
                 </div>
             </div>
-        </Drawer>
+        </Drawer >
     );
 }

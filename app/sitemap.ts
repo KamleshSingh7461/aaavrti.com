@@ -5,7 +5,7 @@ import { Product, Category } from '@/lib/models/Product'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await dbConnect()
 
-    const baseUrl = 'https://aaavrti.shop'
+    const baseUrl = 'https://ournika.com'
 
     // 1. Static Pages
     const staticRoutes = [

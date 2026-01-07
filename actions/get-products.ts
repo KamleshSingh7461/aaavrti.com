@@ -20,10 +20,21 @@ const MOCK_SLUG_MAP: Record<string, string> = {
     'accessories': '4',
 };
 
-// Helper: Recursively get all descendant category IDs
+// Helper: Recursively get all descendant category IDs (Only Active Paths)
 async function getDescendantCategoryIds(categoryId: string): Promise<string[]> {
     await dbConnect();
-    const children = await Category.find({ parentId: categoryId }).select('_id');
+
+    // Check if current node is active (default to true if missing)
+    const current = await Category.findById(categoryId).select('isActive').lean();
+    if (!current || current.isActive === false) {
+        return [];
+    }
+
+    // Fetch children that are NOT explicitly inactive (isActive != false)
+    const children = await Category.find({
+        parentId: categoryId,
+        isActive: { $ne: false }
+    }).select('_id');
 
     let ids = [categoryId];
     for (const child of children) {
@@ -33,7 +44,7 @@ async function getDescendantCategoryIds(categoryId: string): Promise<string[]> {
     return ids;
 }
 
-export async function getProducts(filter?: { categoryId?: string; featured?: boolean; slug?: string; categorySlug?: string; ids?: string[] }): Promise<ProductType[]> {
+export async function getProducts(filter?: { categoryId?: string; featured?: boolean; slug?: string; categorySlug?: string; ids?: string[]; search?: string }): Promise<ProductType[]> {
     try {
         await dbConnect();
         let query: any = {};
@@ -41,7 +52,7 @@ export async function getProducts(filter?: { categoryId?: string; featured?: boo
         if (filter?.categoryId) {
             try {
                 const categoryIds = await getDescendantCategoryIds(filter.categoryId);
-                query.categoryId = { $in: categoryIds };
+                query.categoryId = { $in: categoryIds.map(id => new mongoose.Types.ObjectId(id)) };
             } catch (e) { }
         }
 
@@ -56,6 +67,16 @@ export async function getProducts(filter?: { categoryId?: string; featured?: boo
 
         if (filter?.featured) query.featured = true;
         if (filter?.slug) query.slug = filter.slug;
+
+        if (filter?.search) {
+            const searchRegex = { $regex: filter.search, $options: 'i' };
+            query.$or = [
+                { name_en: searchRegex },
+                { description_en: searchRegex },
+                { name_hi: searchRegex },
+                { sku: searchRegex }
+            ];
+        }
 
         const products = await Product.find(query).sort({ createdAt: -1 }).lean();
         return serialize(products);

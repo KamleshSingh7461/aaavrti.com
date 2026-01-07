@@ -332,7 +332,7 @@ export default function SEOClient({ metadata: initialMetadata, rankings: initial
                                 <label className="text-sm font-medium">Page Title</label>
                                 <input
                                     className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-                                    placeholder="Casual Shirts for Men | Aaavrti"
+                                    placeholder="Casual Shirts for Men | Ournika"
                                     value={editingMeta.title || ''}
                                     onChange={e => setEditingMeta({ ...editingMeta, title: e.target.value })}
                                 />
@@ -395,7 +395,7 @@ export default function SEOClient({ metadata: initialMetadata, rankings: initial
                                 <label className="text-sm font-medium">Target URL</label>
                                 <input
                                     className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-                                    placeholder="https://aaavrti.shop/shop/shirts"
+                                    placeholder="https://ournika.com/shop/shirts"
                                     value={newRanking.url}
                                     onChange={e => setNewRanking({ ...newRanking, url: e.target.value })}
                                 />

@@ -2,7 +2,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Privacy Policy | Aaavrti',
+    title: 'Privacy Policy | Ournika',
     description: 'Read our privacy policy.',
 };
 
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             </div>
 
             <div className="prose prose-stone dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-                <p>At <strong>Aaavrti</strong> (KAMLESH KUMAR SINGH), we value your trust & respect your privacy. This Privacy Policy provides you with details about the manner in which your data is collected, stored & used by us. You are advised to read this Privacy Policy carefully. By downloading and using our application/ website/WAP site you expressly give us consent to use & disclose your personal information in accordance with this Privacy Policy.</p>
+                <p>At <strong>Ournika Private Limited</strong>, we value your trust & respect your privacy. This Privacy Policy provides you with details about the manner in which your data is collected, stored & used by us. You are advised to read this Privacy Policy carefully. By downloading and using our application/ website/WAP site you expressly give us consent to use & disclose your personal information in accordance with this Privacy Policy.</p>
 
                 <h3 className="text-foreground font-semibold text-lg">Note:</h3>
                 <ul className="list-disc pl-5 space-y-2">
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
                 <p>We will not sell, share or rent your personal information to any 3rd party or use your email address/mobile number for unsolicited emails and/or SMS. Any emails and/or SMS sent by us will only be in connection with the provision of agreed services & products and this Privacy Policy.</p>
 
                 <h3 className="text-foreground font-semibold text-lg">Personal Information</h3>
-                <p>Personal Information means and includes all information that can be linked to a specific individual or to identify any individual, such as name, address, mailing address, telephone number, email ID, credit card number, cardholder name, card expiration date, information about your mobile phone, DTH service, data card, electricity connection, Smart Tags and any details that may have been voluntarily provided by the user in connection with availing any of the services on Aaavrti.</p>
+                <p>Personal Information means and includes all information that can be linked to a specific individual or to identify any individual, such as name, address, mailing address, telephone number, email ID, credit card number, cardholder name, card expiration date, information about your mobile phone, DTH service, data card, electricity connection, Smart Tags and any details that may have been voluntarily provided by the user in connection with availing any of the services on Ournika.</p>
             </div>
         </div>
     );

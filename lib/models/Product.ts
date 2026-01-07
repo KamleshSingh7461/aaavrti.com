@@ -7,6 +7,7 @@ const CategorySchema = new Schema({
   slug: { type: String, unique: true, required: true },
   image: { type: String },
   parentId: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+  isActive: { type: Boolean, default: true },
   sortOrder: { type: Number, default: 0 },
 }, {
   timestamps: true,
@@ -47,6 +48,7 @@ const ProductSchema = new Schema({
   description_en: { type: String },
   description_hi: { type: String },
   price: { type: Number, required: true },
+  compareAtPrice: { type: Number }, // MSRP / Original Cost
   hsn_code: { type: String },
 
   stock: { type: Number, default: 0 },

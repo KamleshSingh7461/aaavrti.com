@@ -2,7 +2,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Terms and Conditions | Aaavrti',
+    title: 'Terms and Conditions | Ournika',
     description: 'Read our terms and conditions.',
 };
 
@@ -17,7 +17,7 @@ export default function TermsPage() {
                 </p>
 
                 <p>
-                    For the purpose of these Terms and Conditions, The term &quot;we&quot;, &quot;us&quot;, &quot;our&quot; used anywhere on this page shall mean <strong>KAMLESH KUMAR SINGH</strong>, whose registered/operational office is d/206 Jankalyan CHS, KURLA WEST Mumbai MAHARASHTRA 400070 . &quot;you&quot;, &quot;your&quot;, &quot;user&quot;, &quot;visitor&quot; shall mean any natural or legal person who is visiting our website and/or agreed to purchase from us.
+                    For the purpose of these Terms and Conditions, The term &quot;we&quot;, &quot;us&quot;, &quot;our&quot; used anywhere on this page shall mean <strong>Ournika Private Limited</strong>, whose registered office is [Address to be updated upon company registration]. &quot;you&quot;, &quot;your&quot;, &quot;user&quot;, &quot;visitor&quot; shall mean any natural or legal person who is visiting our website and/or agreed to purchase from us.
                 </p>
 
                 <p>

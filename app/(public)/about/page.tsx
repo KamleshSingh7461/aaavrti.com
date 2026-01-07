@@ -9,7 +9,7 @@ import Link from 'next/link';
 const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'About Us | Aaavrti',
+    title: 'About Us | Ournika',
     description: 'Our story of heritage and craftsmanship.',
 };
 

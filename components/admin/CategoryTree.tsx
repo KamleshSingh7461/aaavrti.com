@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronRight, ChevronDown, Edit2, Trash, Plus, GripVertical } from 'lucide-react';
+import { ChevronRight, ChevronDown, Edit2, Trash, Plus, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { type CategoryTree } from '@/lib/category-utils';
-import { deleteCategory, reorderCategories } from '@/actions/category-actions';
+import { deleteCategory, reorderCategories, toggleCategoryStatus } from '@/actions/category-actions';
 import { Reorder, useDragControls } from 'framer-motion';
 
 interface CategoryTreeProps {
@@ -109,7 +109,7 @@ export function CategoryTreeView({ categories: initialCategories, onEdit, onAddC
                 className="relative"
             >
                 <div
-                    className="group flex items-center gap-2 px-4 py-3 hover:bg-secondary/20 transition-colors border-b border-border/30 bg-card"
+                    className={`group flex items-center gap-2 px-4 py-3 hover:bg-secondary/20 transition-colors border-b border-border/30 bg-card ${!category.isActive ? 'opacity-60 bg-secondary/10' : ''}`}
                     style={{ paddingLeft: `${16 + indent}px` }}
                 >
                     {/* Drag Handle */}
@@ -152,6 +152,17 @@ export function CategoryTreeView({ categories: initialCategories, onEdit, onAddC
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                await toggleCategoryStatus(category.id, !category.isActive);
+                                onRefresh();
+                            }}
+                            className={`p-2 hover:bg-secondary rounded transition-colors ${!category.isActive ? 'text-muted-foreground' : 'text-green-600'}`}
+                            title={category.isActive ? 'Disable Category' : 'Enable Category'}
+                        >
+                            {category.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        </button>
                         <button
                             onClick={() => onAddChild(category.id)}
                             className="p-2 hover:bg-secondary rounded text-muted-foreground hover:text-primary transition-colors"

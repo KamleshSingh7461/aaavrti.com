@@ -13,7 +13,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata = {
-    title: 'Invoice | Aaavrti',
+    title: 'Invoice | Ournika',
     description: 'Order Invoice'
 };
 
@@ -49,12 +49,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                 {/* Header */}
                 <div className="flex justify-between items-start border-b-2 border-black pb-8 mb-8">
                     <div>
-                        <h1 className={cn("text-4xl font-bold uppercase tracking-wider mb-2", cormorant.className)}>Aaavrti</h1>
+                        <h1 className={cn("text-4xl font-bold uppercase tracking-wider mb-2", cormorant.className)}>Ournika</h1>
                         <p className="text-sm text-gray-600">
-                            123, Fashion Street, Sector 21<br />
+                            Ournika Private Limited<br />
                             Gurugram, Haryana, 122001<br />
                             GSTIN: 06ABCDE1234F1Z5<br />
-                            support@aaavrti.com
+                            support@ournika.com
                         </p>
                     </div>
                     <div className="text-right">
@@ -148,7 +148,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
                 {/* Footer */}
                 <div className="text-center text-xs text-gray-500 mt-20 pt-8 border-t border-gray-100">
-                    <p>Thank you for shopping with Aaavrti.</p>
+                    <p>Thank you for shopping with Ournika.</p>
                     <p>This is a computer generated invoice and does not require signature.</p>
                 </div>
             </div>

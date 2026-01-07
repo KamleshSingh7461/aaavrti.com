@@ -105,11 +105,11 @@ export async function sendNotification(options: NotificationOptions): Promise<No
  * Send OTP via WhatsApp/SMS with Email fallback
  */
 export async function sendOTP(phone: string, email: string, otp: string, name?: string) {
-    const message = `Your Aaavrti verification code is: ${otp}\n\nValid for 10 minutes.\n\nDo not share this code with anyone.`;
+    const message = `Your Ournika verification code is: ${otp}\n\nValid for 10 minutes.\n\nDo not share this code with anyone.`;
 
     return sendNotification({
         to: { email, phone, name },
-        subject: 'Your Aaavrti Verification Code',
+        subject: 'Your Ournika Verification Code',
         message,
         htmlMessage: `
             <div style="font-family: Arial, sans-serif; padding: 20px;">
@@ -129,7 +129,7 @@ export async function sendOTP(phone: string, email: string, otp: string, name?: 
  * Send order confirmation via all channels
  */
 export async function sendOrderConfirmation(order: any) {
-    const message = `🎉 Order Confirmed!\n\nOrder #${order.orderNumber}\nTotal: ₹${order.total.toLocaleString('en-IN')}\n\nTrack: https://aaavrti.shop/track?order=${order.orderNumber}\n\nThank you for shopping with Aaavrti! 🛍️`;
+    const message = `🎉 Order Confirmed!\n\nOrder #${order.orderNumber}\nTotal: ₹${order.total.toLocaleString('en-IN')}\n\nTrack: https://ournika.com/track-order?order=${order.orderNumber}\n\nThank you for shopping with Ournika! 🛍️`;
 
     const user = order.userId || order.user;
 
@@ -149,7 +149,7 @@ export async function sendOrderConfirmation(order: any) {
  * Send shipping update via all channels
  */
 export async function sendShippingUpdate(order: any, trackingId: string) {
-    const message = `📦 Your order has been shipped!\n\nOrder #${order.orderNumber}\nTracking ID: ${trackingId}\n\nTrack: https://aaavrti.shop/track?order=${order.orderNumber}`;
+    const message = `📦 Your order has been shipped!\n\nOrder #${order.orderNumber}\nTracking ID: ${trackingId}\n\nTrack: https://ournika.com/track-order?order=${order.orderNumber}`;
 
     const user = order.userId || order.user;
 
@@ -169,7 +169,7 @@ export async function sendShippingUpdate(order: any, trackingId: string) {
  * Send delivery confirmation
  */
 export async function sendDeliveryConfirmation(order: any) {
-    const message = `✅ Order Delivered!\n\nOrder #${order.orderNumber}\n\nWe hope you love your purchase! Please leave a review.\n\nReview: https://aaavrti.shop/product/${order.items[0]?.productId}`;
+    const message = `✅ Order Delivered!\n\nOrder #${order.orderNumber}\n\nWe hope you love your purchase! Please leave a review.\n\nReview: https://ournika.com/product/${order.items[0]?.productId}`;
 
     const user = order.userId || order.user;
 

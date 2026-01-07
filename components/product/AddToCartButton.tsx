@@ -6,12 +6,12 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function AddToCartButton({ product, variantId, disabled, className }: { product: Product; variantId?: string; disabled?: boolean; className?: string }) {
+export function AddToCartButton({ product, variantId, disabled, className, quantity = 1 }: { product: Product; variantId?: string; disabled?: boolean; className?: string; quantity?: number }) {
     const { addItem } = useCart();
     const [added, setAdded] = useState(false);
 
     const handleClick = () => {
-        addItem({ ...product, id: variantId || product.id, productId: product.id }); // Preserve productId for FK
+        addItem({ ...product, id: variantId || product.id, productId: product.id, quantity }); // Preserve productId for FK
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };

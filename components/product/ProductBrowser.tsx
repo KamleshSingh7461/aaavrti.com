@@ -42,6 +42,9 @@ export function ProductBrowser({ initialProducts, categories, minPrice, maxPrice
     );
     const [sortBy, setSortBy] = useState(initialSort || searchParams.get('sort') || 'newest');
     const [selectedTag, setSelectedTag] = useState<string | undefined>(initialTag || searchParams.get('tag') || undefined);
+    const [minRating, setMinRating] = useState<number | undefined>(
+        searchParams.get('rating') ? Number(searchParams.get('rating')) : undefined
+    );
 
     // Extract available colors from products and their variants
     const availableColors = Array.from(new Set(
@@ -119,11 +122,12 @@ export function ProductBrowser({ initialProducts, categories, minPrice, maxPrice
         if (showOffersOnly) params.set('offers', 'true');
         if (selectedColors.length > 0) params.set('colors', selectedColors.join(','));
         if (selectedSizes.length > 0) params.set('sizes', selectedSizes.join(','));
+        if (minRating) params.set('rating', minRating.toString());
         if (sortBy !== 'newest') params.set('sort', sortBy);
 
         const queryString = params.toString();
         router.push(`${basePath}${queryString ? `?${queryString}` : ''}`, { scroll: false });
-    }, [selectedTag, selectedCategory, priceRange, showInStockOnly, showOffersOnly, selectedColors, selectedSizes, sortBy, router, minPrice, maxPrice, basePath]);
+    }, [selectedTag, selectedCategory, priceRange, showInStockOnly, showOffersOnly, selectedColors, selectedSizes, minRating, sortBy, router, minPrice, maxPrice, basePath]);
 
     // Filter products client-side
     let filteredProducts = [...initialProducts];
@@ -194,6 +198,10 @@ export function ProductBrowser({ initialProducts, categories, minPrice, maxPrice
         filteredProducts = filteredProducts.filter(p => p.stock > 0);
     }
 
+    if (minRating) {
+        filteredProducts = filteredProducts.filter(p => (p.averageRating || 0) >= minRating);
+    }
+
     // Sort products
     filteredProducts.sort((a, b) => {
         switch (sortBy) {
@@ -220,6 +228,7 @@ export function ProductBrowser({ initialProducts, categories, minPrice, maxPrice
         selectedSizes.length > 0,
         showInStockOnly,
         showOffersOnly,
+        minRating,
         priceRange[0] !== minPrice || priceRange[1] !== maxPrice
     ].filter(Boolean).length;
 
@@ -279,6 +288,8 @@ export function ProductBrowser({ initialProducts, categories, minPrice, maxPrice
                 sizes={availableSizes}
                 selectedSizes={selectedSizes}
                 onSizeChange={setSelectedSizes}
+                minRating={minRating}
+                onRatingChange={setMinRating}
             />
         </div>
     );

@@ -91,7 +91,7 @@ Policy links are also included in email footers:
 ✅ **Shipping Policy** - Delivery timelines and charges  
 ✅ **Contact Information** - Support email and address provided  
 ✅ **Footer Links** - All policies accessible from footer  
-✅ **Business Details** - Owner: KAMLESH KUMAR SINGH  
+✅ **Business Details** - Company: Ournika Private Limited  
 ✅ **Registered Address** - D/206 Jankalyan CHS, Mumbai, India  
 
 ---
@@ -116,7 +116,7 @@ When Razorpay asks for policy pages, please provide these URLs:
 
 ## Contact Information on Website
 
-**Business Name:** KAMLESH KUMAR SINGH (Aaavrti)  
+**Business Name:** Ournika Private Limited  
 **Address:** D/206 Jankalyan CHS, Mumbai, Maharashtra, India  
 **Support Email:** support@aaavrti.com  
 **Privacy Email:** privacy@aaavrti.shop  

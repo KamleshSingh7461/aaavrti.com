@@ -13,6 +13,7 @@ export interface ProductWithCategory {
     description_en: string;
     description_hi: string | null;
     price: number;
+    compareAtPrice?: number;
     stock: number;
     status: string;
     featured: boolean;
@@ -178,6 +179,7 @@ export async function createProduct(formData: FormData) {
         const description_hi = formData.get('description_hi') as string | null;
         const categoryId = formData.get('categoryId') as string;
         const price = parseFloat(formData.get('price') as string);
+        const compareAtPrice = parseFloat(formData.get('compareAtPrice') as string) || undefined;
         const stock = parseInt(formData.get('stock') as string) || 0;
         const sku = formData.get('sku') as string | null;
         const status = formData.get('status') as string || 'DRAFT';
@@ -236,6 +238,7 @@ export async function createProduct(formData: FormData) {
             description_en,
             description_hi,
             price,
+            compareAtPrice,
             stock,
             status,
             featured,
@@ -248,8 +251,25 @@ export async function createProduct(formData: FormData) {
             categoryId,
         });
 
+        const populatedProduct = await Product.findById(product._id).populate('categoryId', 'name_en slug').lean();
+
+        if (!populatedProduct) return { error: 'Failed to retrieve created product' };
+
+        const serializedProduct = {
+            ...populatedProduct,
+            id: populatedProduct._id.toString(),
+            _id: undefined,
+            __v: undefined,
+            category: populatedProduct.categoryId ? {
+                id: (populatedProduct.categoryId as any)._id.toString(),
+                name_en: (populatedProduct.categoryId as any).name_en,
+                slug: (populatedProduct.categoryId as any).slug,
+            } : null,
+            categoryId: undefined
+        };
+
         revalidatePath('/products');
-        return { success: true, product: { ...product.toObject(), id: product._id.toString() } };
+        return { success: true, product: serializedProduct };
     } catch (error: any) {
         console.error('Error creating product:', error);
         return { error: 'Failed to create product' };
@@ -266,6 +286,7 @@ export async function updateProduct(id: string, formData: FormData) {
         const description_hi = formData.get('description_hi') as string | null;
         const categoryId = formData.get('categoryId') as string;
         const price = parseFloat(formData.get('price') as string);
+        const compareAtPrice = parseFloat(formData.get('compareAtPrice') as string) || undefined;
         const stock = parseInt(formData.get('stock') as string) || 0;
         const sku = formData.get('sku') as string | null;
         const status = formData.get('status') as string || 'DRAFT';
@@ -301,6 +322,7 @@ export async function updateProduct(id: string, formData: FormData) {
             description_en,
             description_hi: description_hi || null,
             price: price,
+            compareAtPrice: compareAtPrice || null, // Allow clearing it
             stock: stock,
             sku: sku || null,
             status,
@@ -315,7 +337,15 @@ export async function updateProduct(id: string, formData: FormData) {
         if (variants !== undefined) updateData.variants = variants;
         if (attributes !== undefined) updateData.attributes = attributes;
 
-        const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
+        if (compareAtPrice === undefined || isNaN(compareAtPrice)) {
+            delete updateData.compareAtPrice;
+        }
+
+        const product = await Product.findByIdAndUpdate(id, updateData, { new: true }).populate('categoryId', 'name_en slug').lean();
+
+        if (!product) {
+            return { error: 'Product not found or failed to update' };
+        }
 
         // Debug log
         console.log('Product updated:', id);
@@ -327,7 +357,20 @@ export async function updateProduct(id: string, formData: FormData) {
             console.error('Revalidate path failed:', e);
         }
 
-        return { success: true, product: { ...product.toObject(), id: product._id.toString() } };
+        const serializedProduct = {
+            ...product,
+            id: product._id.toString(),
+            _id: undefined,
+            __v: undefined,
+            category: product.categoryId ? {
+                id: (product.categoryId as any)._id.toString(),
+                name_en: (product.categoryId as any).name_en,
+                slug: (product.categoryId as any).slug,
+            } : null,
+            categoryId: undefined
+        };
+
+        return { success: true, product: serializedProduct };
     } catch (error: any) {
         console.error('Error updating product:', error);
         if (error.code === 11000) { // Mongoose duplicate key error

@@ -16,13 +16,13 @@ export async function GET() {
             .sort({ updatedAt: -1 })
             .lean();
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://aaavrti.shop';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ournika.com';
 
         // Start XML construction
         let xml = `<?xml version="1.0"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
 <channel>
-<title>Aaavrti Product Feed</title>
+<title>Ournika Product Feed</title>
 <link>${baseUrl}</link>
 <description>Premium Ethnic Wear Collection</description>
 `;
@@ -59,7 +59,7 @@ export async function GET() {
 <g:description><![CDATA[${product.description_en || product.name_en}]]></g:description>
 <g:link>${baseUrl}/product/${product.slug || product._id}</g:link>
 <g:image_link>${mainImage}</g:image_link>
-<g:brand>Aaavrti</g:brand>
+<g:brand>Ournika</g:brand>
 <g:condition>new</g:condition>
 <g:availability>${product.stock > 0 ? 'in stock' : 'out of stock'}</g:availability>
 <g:price>${product.price} INR</g:price>

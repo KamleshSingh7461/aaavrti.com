@@ -6,6 +6,7 @@ export interface Category {
     name_hi: string | null;
     image?: string | null;
     sortOrder?: number;
+    isActive?: boolean;
     parentId: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -13,6 +14,7 @@ export interface Category {
 
 export interface CategoryWithChildren extends Category {
     children: CategoryWithChildren[];
+    featuredProducts?: Product[];
 }
 
 export interface Product {
@@ -23,6 +25,7 @@ export interface Product {
     description_en: string;
     description_hi: string | null;
     price: number;
+    compareAtPrice?: number;
     stock?: number; // Added for inventory check
     hsn_code: string | null;
     attributes: any; // Json
@@ -32,6 +35,7 @@ export interface Product {
     createdAt: Date;
     updatedAt: Date;
     variants?: any; // Parsed JSON variants
+    averageRating?: number;
     meta_title?: string | null;
     meta_description?: string | null;
     meta_keywords?: string | null;

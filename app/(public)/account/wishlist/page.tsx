@@ -6,13 +6,19 @@ import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { getWishlist } from '@/actions/wishlist-actions';
+
 export default function WishlistPage() {
-    const { items } = useWishlist();
+    const { items, setItems } = useWishlist();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        // Always fetch fresh data on this page to guarantee accuracy
+        getWishlist().then((serverItems) => {
+            if (serverItems) setItems(serverItems as any);
+        });
+    }, [setItems]);
 
     if (!mounted) return null;
 

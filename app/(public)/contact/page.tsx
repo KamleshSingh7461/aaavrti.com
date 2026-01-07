@@ -50,8 +50,20 @@ export default function ContactPage() {
                             </div>
                             <div>
                                 <h3 className="font-semibold text-xl mb-1">Email Us</h3>
-                                <p className="text-muted-foreground mb-2">For general inquiries and support:</p>
-                                <a href="mailto:kamlesh7461@gmail.com" className="text-foreground font-medium hover:text-primary transition-colors">kamlesh7461@gmail.com</a>
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-muted-foreground text-sm">General Inquiries:</p>
+                                        <a href="mailto:info@ournika.com" className="text-foreground font-medium hover:text-primary transition-colors">info@ournika.com</a>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-sm">Customer Support:</p>
+                                        <a href="mailto:support@ournika.com" className="text-foreground font-medium hover:text-primary transition-colors">support@ournika.com</a>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-sm">Orders & Shipping:</p>
+                                        <a href="mailto:orders@ournika.com" className="text-foreground font-medium hover:text-primary transition-colors">orders@ournika.com</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -51,6 +51,42 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     providers: [
         Credentials({
             async authorize(credentials) {
+                // 1. OTP Authentication
+                if (credentials.otp && credentials.email) {
+                    const { email, otp } = credentials as { email: string, otp: string };
+
+                    // Verify OTP from DB
+                    try {
+                        await dbConnect();
+                        const { Otp } = await import('@/lib/models/Otp');
+                        const otpRecord = await Otp.findOne({ email, otp });
+
+                        if (!otpRecord) {
+                            console.log('Invalid OTP');
+                            return null;
+                        }
+
+                        // OTP Valid. Find User.
+                        const user = await getUser(email);
+
+                        if (!user) {
+                            // If user not found during login, return null. 
+                            // Signup flow should create user first then call signIn.
+                            console.log('User not found for OTP login');
+                            return null;
+                        }
+
+                        // Optional: Delete OTP after successful login usage
+                        await Otp.deleteOne({ _id: otpRecord._id });
+
+                        return user;
+                    } catch (e) {
+                        console.error('OTP Auth Error', e);
+                        return null;
+                    }
+                }
+
+                // 2. Password Authentication (Admin / Legacy)
                 const parsedCredentials = z
                     .object({ email: z.string().email(), password: z.string().min(6) })
                     .safeParse(credentials);
@@ -60,7 +96,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                     const user: any = await getUser(email);
                     if (!user) return null;
 
-                    // If user has no password (e.g. OAuth), return null (or handle differently)
+                    // If user has no password (e.g. OAuth/OTP only), and trying password login
                     if (!user.password) return null;
 
                     const passwordsMatch = await bcrypt.compare(password, user.password);

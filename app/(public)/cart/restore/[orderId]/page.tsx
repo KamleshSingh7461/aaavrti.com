@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Restore Your Cart | Aaavrti',
+    title: 'Restore Your Cart | Ournika',
     description: 'Complete your order',
 };
 

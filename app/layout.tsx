@@ -1,33 +1,79 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Cormorant_Garamond } from 'next/font/google';
+import { Outfit, Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const outfit = Outfit({
+  variable: '--font-outfit',
   subsets: ['latin'],
-});
-
-const cormorant = Cormorant_Garamond({
-  variable: '--font-cormorant',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
-  title: 'Aaavrti - Timeless Indian Fashion',
-  description: 'Discover exquisite handcrafted Indian clothing',
+  title: 'Ournika - Timeless Indian Fashion',
+  description: 'Discover exquisite handcrafted Indian clothing, sarees, kurtas, and ethnic wear. Premium quality traditional Indian fashion.',
+  keywords: ['Indian fashion', 'sarees', 'kurtas', 'ethnic wear', 'traditional clothing', 'handcrafted', 'Ournika'],
+  authors: [{ name: 'Ournika Private Limited' }],
+  creator: 'Ournika Private Limited',
+  publisher: 'Ournika Private Limited',
+  metadataBase: new URL('https://ournika.com'),
+  alternates: {
+    canonical: 'https://ournika.com',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_IN',
+    url: 'https://ournika.com',
+    title: 'Ournika - Timeless Indian Fashion',
+    description: 'Discover exquisite handcrafted Indian clothing, sarees, kurtas, and ethnic wear. Premium quality traditional Indian fashion.',
+    siteName: 'Ournika',
+    images: [
+      {
+        url: 'https://res.cloudinary.com/desdbjzzt/image/upload/v1767742482/OURNIKA_LOGO_jfawwb.png',
+        width: 1200,
+        height: 630,
+        alt: 'Ournika Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ournika - Timeless Indian Fashion',
+    description: 'Discover exquisite handcrafted Indian clothing, sarees, kurtas, and ethnic wear.',
+    images: ['https://res.cloudinary.com/desdbjzzt/image/upload/v1767742482/OURNIKA_LOGO_jfawwb.png'],
+    creator: '@ournika',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: 'https://res.cloudinary.com/desdbjzzt/image/upload/v1767742482/OURNIKA_LOGO_jfawwb.png',
+    shortcut: 'https://res.cloudinary.com/desdbjzzt/image/upload/v1767742482/OURNIKA_LOGO_jfawwb.png',
+    apple: 'https://res.cloudinary.com/desdbjzzt/image/upload/v1767742482/OURNIKA_LOGO_jfawwb.png',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: 'https://res.cloudinary.com/desdbjzzt/image/upload/v1767742482/OURNIKA_LOGO_jfawwb.png',
+    },
+  },
 };
 
 import { auth } from '@/auth';
 
 import Script from 'next/script';
 import { ConsentBanner } from '@/components/privacy/ConsentBanner';
+import { OrganizationSchema, WebsiteSchema } from '@/components/seo/StructuredData';
 
 export default async function RootLayout({
   children,
@@ -38,7 +84,11 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`} suppressHydrationWarning>
+      <head>
+        <OrganizationSchema />
+        <WebsiteSchema />
+      </head>
+      <body className={`${inter.variable} ${outfit.variable} antialiased`} suppressHydrationWarning>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-7CNEJFGTMT"
           strategy="afterInteractive"

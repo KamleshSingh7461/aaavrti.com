@@ -103,7 +103,7 @@ UPI ID: success@razorpay
 
 If you encounter any issues during testing, please contact:
 - **Developer:** Kamlesh Singh
-- **Project:** Aaavrti E-commerce Platform
+- **Project:** Ournika E-commerce Platform
 
 ---
 

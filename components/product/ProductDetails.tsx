@@ -73,6 +73,7 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
     const [showSizeGuide, setShowSizeGuide] = useState(false);
+    const [quantity, setQuantity] = useState(1);
 
     // Initialize options with first available values
     useEffect(() => {
@@ -139,96 +140,110 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative">
-            {/* Left: Image Gallery */}
+            {/* Left: Image Gallery (Futuristic & Immersive) */}
             <div className="space-y-6 lg:sticky lg:top-24 h-fit">
                 <FadeIn>
-                    <div className="aspect-[3/4] relative overflow-hidden bg-secondary/10 cursor-zoom-in group shadow-sm transition-all duration-500">
+                    <div className="aspect-[3/4] relative overflow-hidden bg-[#F9F8F6] rounded-[2rem] cursor-zoom-in group shadow-2xl shadow-[#D1CDC0]/30 border border-white/50">
                         <Image
                             src={activeImage}
                             alt={product.name_en}
                             fill
-                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                             priority
-                            quality={95}
+                            quality={100}
                         />
-                        {/* Image Indicators for Mobile */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 lg:hidden">
-                            {displayedImages.map((_, i) => (
-                                <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-all", activeImage === displayedImages[i] ? "bg-white w-3" : "bg-white/50")} />
-                            ))}
-                        </div>
+
+                        {/* Futuristic Floating Thumbnails */}
+                        {displayedImages.length > 1 && (
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 w-auto max-w-[90%]">
+                                <StaggerContainer className="flex items-center gap-3 p-2.5 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl overflow-x-auto no-scrollbar">
+                                    {displayedImages.map((img, i) => (
+                                        <StaggerItem key={i} className="shrink-0">
+                                            <button
+                                                onClick={() => setActiveImage(img)}
+                                                className={cn(
+                                                    "relative w-12 h-12 rounded-full overflow-hidden transition-all duration-300 border-2",
+                                                    activeImage === img
+                                                        ? 'border-white scale-110 shadow-lg ring-2 ring-black/20'
+                                                        : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'
+                                                )}
+                                            >
+                                                <Image
+                                                    src={img}
+                                                    alt={`View ${i}`}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </button>
+                                        </StaggerItem>
+                                    ))}
+                                </StaggerContainer>
+                            </div>
+                        )}
                     </div>
                 </FadeIn>
-
-                {/* Thumbnails - Desktop Grid */}
-                {displayedImages.length > 1 && (
-                    <StaggerContainer className="hidden lg:grid grid-cols-5 gap-3">
-                        {displayedImages.map((img, i) => (
-                            <StaggerItem key={i}>
-                                <button
-                                    onClick={() => setActiveImage(img)}
-                                    className={cn(
-                                        "aspect-[3/4] relative overflow-hidden bg-secondary/10 transition-all duration-300",
-                                        activeImage === img ? 'ring-1 ring-primary brightness-100 shadow-md' : 'brightness-90 hover:brightness-100 opacity-70 hover:opacity-100'
-                                    )}
-                                >
-                                    <Image
-                                        src={img}
-                                        alt={`View ${i}`}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </button>
-                            </StaggerItem>
-                        ))}
-                    </StaggerContainer>
-                )}
             </div>
 
             {/* Right: Product Info */}
             <div className="flex flex-col h-full lg:pt-4">
                 <FadeIn delay={0.2} className="space-y-8">
-                    {/* Header */}
-                    <div className="space-y-4 border-b border-border/40 pb-6">
-                        <div className="space-y-2">
-                            <div className="flex items-start justify-between">
-                                <h1 className={cn("text-3xl md:text-5xl lg:text-5xl font-light text-foreground tracking-tight leading-tight", cormorant.className)}>
+                    {/* Header - Super Clean */}
+                    <div className="space-y-6 border-b border-gray-100 pb-8">
+                        <div className="space-y-4">
+                            <div className="flex items-start justify-between gap-4">
+                                <h1 className={cn("text-4xl md:text-6xl font-normal text-foreground leading-[1.1] tracking-normal", cormorant.className)}>
                                     {t({ en: product.name_en, hi: product.name_hi })}
                                 </h1>
-                                <WishlistButton product={product} className="shrink-0 ml-4 hover:bg-secondary rounded-full p-2 h-10 w-10 transition-colors" />
+                                <WishlistButton product={product} className="shrink-0 h-14 w-14 rounded-full border border-gray-200 hover:bg-black hover:text-white transition-all shadow-sm flex items-center justify-center" />
                             </div>
+
                             {selectedVariant && (
-                                <p className="text-xs tracking-widest text-muted-foreground uppercase">SKU: {selectedVariant.sku}</p>
+                                <p className="text-xs font-mono tracking-widest text-neutral-400 uppercase">
+                                    REF. {selectedVariant.sku}
+                                </p>
                             )}
                         </div>
 
-                        {/* Price */}
-                        <div className="space-y-3">
-                            <div className="flex items-baseline gap-3">
-                                <span className={cn("text-4xl font-light text-foreground", cormorant.className)}>
-                                    ₹{currentPrice.toLocaleString('en-IN')}
-                                </span>
-                                {currentPrice !== product.price && (
-                                    <span className="text-xl text-muted-foreground line-through">
-                                        ₹{product.price.toLocaleString('en-IN')}
+                        {/* Price - Bold & Simple */}
+                        {/* Price - Bold & Simple */}
+                        <div className="flex items-center gap-4">
+                            <span className="text-3xl font-medium tracking-tight">
+                                ₹{currentPrice.toLocaleString('en-IN')}
+                            </span>
+
+                            {/* Discount logic: Check compareAtPrice first, then fallback to variant difference */}
+                            {(product.compareAtPrice && product.compareAtPrice > currentPrice) ? (
+                                <>
+                                    <span className="text-xl text-neutral-400 line-through decoration-1">
+                                        ₹{product.compareAtPrice.toLocaleString('en-IN')}
                                     </span>
-                                )}
-                                <span className="text-sm text-green-600 font-medium bg-green-50 px-2 py-1 rounded">
-                                    {t({ en: 'In Stock', hi: 'स्टॉक में है' })}
+                                    <span className="text-xs font-bold bg-red-600 text-white px-2 py-1 rounded-sm uppercase tracking-widest">
+                                        {Math.round(((product.compareAtPrice - currentPrice) / product.compareAtPrice) * 100)}% OFF
+                                    </span>
+                                </>
+                            ) : (currentPrice !== product.price) && (
+                                <span className="text-xl text-neutral-400 line-through decoration-1">
+                                    ₹{product.price.toLocaleString('en-IN')}
                                 </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">Inclusive of all taxes</p>
-                            <p className="text-sm text-muted-foreground font-light">
-                                {t({ en: 'Price inclusive of all taxes. Free shipping on all prepaid orders.', hi: 'सभी करों सहित। सभी प्रीपेड ऑर्डर पर मुफ्त शिपिंग।' })}
-                            </p>
+                            )}
+
+                            {(currentPrice !== product.price || offers.length > 0) && !product.compareAtPrice && (
+                                <span className="text-xs font-bold bg-black text-white px-3 py-1.5 rounded-full uppercase tracking-widest">
+                                    Offer Available
+                                </span>
+                            )}
                         </div>
 
-                        {/* Offers Section */}
-                        {offers.length > 0 && (
-                            <div className="pt-4">
-                                <ProductOffers offers={offers} />
-                            </div>
+                        {/* Dynamic Stock Indicator */}
+                        {currentStock < 10 && currentStock > 0 && (
+                            <p className="text-sm font-medium text-amber-600 animate-pulse">
+                                Only {currentStock} left in stock - Order now!
+                            </p>
                         )}
+
+                        <p className="text-sm text-neutral-500 font-medium">
+                            Tax included. Free shipping worldwide.
+                        </p>
                     </div>
 
                     {/* Attribute Selectors */}
@@ -263,30 +278,28 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
                                                         key={val}
                                                         onClick={() => handleOptionSelect(key, val)}
                                                         className={cn(
-                                                            "w-10 h-10 rounded-full border shadow-sm transition-all relative group",
-                                                            isSelected ? 'ring-2 ring-primary ring-offset-2 scale-110' : 'hover:scale-105 ring-1 ring-transparent hover:ring-border'
+                                                            "w-12 h-12 rounded-full border-2 transition-all relative group",
+                                                            isSelected ? 'border-foreground scale-110 shadow-lg' : 'border-transparent hover:border-border hover:scale-105'
                                                         )}
                                                         style={{ backgroundColor: val.toLowerCase() }}
                                                         title={val}
                                                     >
-                                                        {isSelected && (
-                                                            <span className="absolute inset-0 flex items-center justify-center text-white drop-shadow-md">
-                                                                <Check className="w-5 h-5" />
-                                                            </span>
-                                                        )}
+                                                        {/* Hover Ring */}
+                                                        <span className="absolute inset-0 rounded-full ring-1 ring-black/5" />
                                                     </button>
                                                 )
                                             }
 
+                                            // Modern Pill Selector (Luxe)
                                             return (
                                                 <button
                                                     key={val}
                                                     onClick={() => handleOptionSelect(key, val)}
                                                     className={cn(
-                                                        "min-w-[3.5rem] px-4 h-11 flex items-center justify-center border transition-all text-sm font-medium relative overflow-hidden",
+                                                        "min-w-[4rem] px-6 h-12 flex items-center justify-center rounded-full border transition-all text-sm font-bold tracking-wide relative overflow-hidden",
                                                         isSelected
-                                                            ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                                                            : 'border-border/60 bg-transparent hover:border-primary hover:text-primary'
+                                                            ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
+                                                            : 'border-[#D1CDC0] bg-white text-[#1A1A1A] hover:border-primary hover:text-primary'
                                                     )}
                                                 >
                                                     {val}
@@ -299,14 +312,36 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
                         })}
                     </div>
 
-                    {/* Actions */}
-                    <div className="space-y-4 pt-6">
-                        <AddToCartButton
-                            product={product}
-                            variantId={selectedVariant?.id}
-                            disabled={isOutOfStock}
-                            className="w-full h-14 text-lg bg-foreground text-background hover:bg-foreground/90 transition-colors uppercase tracking-widest font-medium"
-                        />
+                    {/* Actions: Quantity + Cart */}
+                    <div className="space-y-6 pt-6 border-t border-[#E6E2D3]">
+                        <div className="flex gap-4">
+                            {/* Quantity Selector */}
+                            <div className="h-16 w-36 rounded-full border border-[#D1CDC0] bg-[#F9F8F6] flex items-center justify-between px-2 shrink-0">
+                                <button
+                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-[#5C4033] transition-colors"
+                                    disabled={quantity <= 1}
+                                >
+                                    -
+                                </button>
+                                <span className={cn("text-xl font-medium text-[#1A1A1A]", cormorant.className)}>{quantity}</span>
+                                <button
+                                    onClick={() => setQuantity(quantity + 1)}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-[#5C4033] transition-colors"
+                                    disabled={quantity >= currentStock}
+                                >
+                                    +
+                                </button>
+                            </div>
+
+                            <AddToCartButton
+                                product={product}
+                                variantId={selectedVariant?.id}
+                                disabled={isOutOfStock}
+                                quantity={quantity}
+                                className="flex-1 h-16 text-lg rounded-full bg-primary text-white hover:bg-[#B89628] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-[0.2em] font-bold shadow-xl shadow-primary/20"
+                            />
+                        </div>
 
                         {/* Trust Badges - Horizontal Scrollable on Mobile */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-border/40">
@@ -396,12 +431,14 @@ export function ProductDetails({ product, offers = [] }: ProductDetailsProps) {
             </div>
 
             {/* Size Guide Modal */}
-            {showSizeGuide && (
-                <SizeGuideModal
-                    category={product.category?.slug || 'sarees'}
-                    onClose={() => setShowSizeGuide(false)}
-                />
-            )}
-        </div>
+            {
+                showSizeGuide && (
+                    <SizeGuideModal
+                        categoryId={typeof product.categoryId === 'string' ? product.categoryId : (product.categoryId as any)?._id || product.categoryId}
+                        onClose={() => setShowSizeGuide(false)}
+                    />
+                )
+            }
+        </div >
     );
 }

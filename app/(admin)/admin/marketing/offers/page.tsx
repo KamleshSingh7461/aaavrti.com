@@ -1,12 +1,14 @@
 
-import { getOffers } from "@/actions/marketing-actions";
+import { getAllOffers } from "@/actions/offer-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, TrendingUp, Percent, Tag } from "lucide-react";
+import { OfferActions } from "@/components/admin/marketing/OfferActions";
 
 export default async function OffersPage() {
-    const offers = await getOffers();
+    const result = await getAllOffers();
+    const offers = result.success ? result.offers : [];
 
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('en-IN', {
@@ -20,6 +22,19 @@ export default async function OffersPage() {
     const isActive = (active: boolean, startDate: Date, endDate: Date) => {
         const now = new Date();
         return active && now >= new Date(startDate) && now <= new Date(endDate);
+    };
+
+    const getOfferTypeLabel = (type: string) => {
+        const labels: Record<string, string> = {
+            'PERCENTAGE': 'Percentage',
+            'FIXED': 'Fixed Amount',
+            'BUNDLE': 'Bundle',
+            'BOGO': 'BOGO',
+            'MIX_MATCH': 'Mix & Match',
+            'QUANTITY_DISCOUNT': 'Qty Discount',
+            'TIERED': 'Tiered'
+        };
+        return labels[type] || type;
     };
 
     return (
@@ -62,8 +77,9 @@ export default async function OffersPage() {
                         <Percent className="h-4 w-4" />
                         Total Usage
                     </div>
-                    {/* Assuming offers have usage tracking eventually, or just sum up something else */}
-                    <div className="text-2xl font-bold"> - </div>
+                    <div className="text-2xl font-bold">
+                        {offers.reduce((sum: number, o: any) => sum + (o.usedCount || 0), 0)}
+                    </div>
                 </div>
             </div>
 
@@ -75,35 +91,44 @@ export default async function OffersPage() {
                             <tr>
                                 <th className="text-left p-4 font-medium text-sm">Title</th>
                                 <th className="text-left p-4 font-medium text-sm">Code</th>
+                                <th className="text-left p-4 font-medium text-sm">Type</th>
                                 <th className="text-left p-4 font-medium text-sm">Value</th>
                                 <th className="text-left p-4 font-medium text-sm">Valid Period</th>
                                 <th className="text-left p-4 font-medium text-sm">Status</th>
+                                <th className="text-left p-4 font-medium text-sm">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {offers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-12 text-muted-foreground">
-                                        No offers created yet.
+                                    <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                                        No offers created yet. Click "Create Offer" to get started.
                                     </td>
                                 </tr>
                             ) : (
                                 offers.map((offer: any) => (
                                     <tr key={offer._id} className="border-b border-border hover:bg-secondary/20 transition-colors">
                                         <td className="p-4">
-                                            <Link href={`/admin/marketing/offers/${offer._id}`} className="font-semibold hover:text-primary">
-                                                {offer.title}
-                                            </Link>
+                                            <div className="font-semibold">{offer.title || offer.code}</div>
                                             {offer.description && (
                                                 <div className="text-xs text-muted-foreground mt-1 truncate max-w-xs">{offer.description}</div>
                                             )}
                                         </td>
                                         <td className="p-4 font-mono text-sm">{offer.code}</td>
                                         <td className="p-4">
+                                            <Badge variant="outline">{getOfferTypeLabel(offer.type)}</Badge>
+                                        </td>
+                                        <td className="p-4">
                                             {offer.type === 'PERCENTAGE' ? (
-                                                <Badge variant="outline">{offer.value}% OFF</Badge>
+                                                <span className="font-semibold">{offer.value}% OFF</span>
+                                            ) : offer.type === 'FIXED' ? (
+                                                <span className="font-semibold">₹{offer.value} OFF</span>
+                                            ) : offer.type === 'BUNDLE' || offer.type === 'MIX_MATCH' || offer.type === 'QUANTITY_DISCOUNT' ? (
+                                                <span className="font-semibold">{offer.bundleQuantity} @ ₹{offer.bundlePrice}</span>
+                                            ) : offer.type === 'BOGO' ? (
+                                                <span className="font-semibold">Buy {offer.buyQuantity} Get {offer.getQuantity}</span>
                                             ) : (
-                                                <Badge variant="outline">₹{offer.value} OFF</Badge>
+                                                <span className="font-semibold">Tiered</span>
                                             )}
                                         </td>
                                         <td className="p-4 text-sm">
@@ -116,10 +141,17 @@ export default async function OffersPage() {
                                             ) : isExpired(offer.endDate) ? (
                                                 <Badge variant="secondary">Expired</Badge>
                                             ) : !offer.isActive ? (
-                                                <Badge variant="secondary">Inactive</Badge>
+                                                <Badge variant="secondary">Paused</Badge>
                                             ) : (
                                                 <Badge variant="outline">Scheduled</Badge>
                                             )}
+                                        </td>
+                                        <td className="p-4">
+                                            <OfferActions
+                                                offerId={offer._id}
+                                                isActive={offer.isActive}
+                                                offerCode={offer.code}
+                                            />
                                         </td>
                                     </tr>
                                 ))

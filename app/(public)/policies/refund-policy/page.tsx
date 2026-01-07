@@ -2,7 +2,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Cancellation & Refund Policy | Aaavrti',
+    title: 'Cancellation & Refund Policy | Ournika',
     description: 'Read our cancellation and refund policy.',
 };
 
@@ -13,7 +13,7 @@ export default function RefundPolicyPage() {
 
             <div className="prose prose-stone dark:prose-invert max-w-none space-y-6 text-foreground/80 leading-relaxed">
                 <p>
-                    KAMLESH KUMAR SINGH believes in helping its customers as far as possible, and has therefore a liberal cancellation policy. Under this policy:
+                    Ournika Private Limited believes in helping its customers as far as possible, and has therefore a liberal cancellation policy. Under this policy:
                 </p>
 
                 <section>
@@ -22,7 +22,7 @@ export default function RefundPolicyPage() {
                         Cancellations will be considered only if the request is made within 2-3 days of placing the order. However, the cancellation request may not be entertained if the orders have been communicated to the vendors/merchants and they have initiated the process of shipping them.
                     </p>
                     <p className="mt-4">
-                        KAMLESH KUMAR SINGH does not accept cancellation requests for perishable items like flowers, eatables etc. However, refund/replacement can be made if the customer establishes that the quality of product delivered is not good.
+                        Ournika Private Limited does not accept cancellation requests for perishable items like flowers, eatables etc. However, refund/replacement can be made if the customer establishes that the quality of product delivered is not good.
                     </p>
                 </section>
 

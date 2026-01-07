@@ -41,13 +41,13 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
 
                 <Carousel
                     opts={{
-                        align: "center",
+                        align: "start",
                         loop: true,
                     }}
                     className="w-full"
                 >
-                    <CarouselContent className="-ml-4 justify-center">
-                        {categories.map((category) => (
+                    <CarouselContent className="-ml-4">
+                        {categories.map((category, index) => (
                             <CarouselItem key={category.id} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/5">
                                 <Link href={`/category/${category.slug}`}>
                                     <div className="group cursor-pointer">
@@ -59,6 +59,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                                                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                                                    priority={index < 4}
                                                 />
                                             ) : (
                                                 <div className="absolute inset-0 bg-secondary/30 flex items-center justify-center text-muted-foreground group-hover:bg-secondary/40 transition-colors">

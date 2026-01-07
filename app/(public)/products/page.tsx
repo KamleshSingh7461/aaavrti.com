@@ -6,7 +6,7 @@ import { FadeIn } from '@/components/ui/motion';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-    title: 'All Products | Aaavrti',
+    title: 'All Products | Ournika',
     description: 'Explore our complete collection of authentic Indian heritage wear.'
 };
 
@@ -14,18 +14,19 @@ interface PageProps {
     searchParams: Promise<{
         tag?: string;
         sort?: string;
+        search?: string;
     }>;
 }
 
 export default async function AllProductsPage({ searchParams }: PageProps) {
-    const { tag, sort } = await searchParams;
-    console.log('AllProductsPage searchParams (awaited):', { tag, sort });
+    const { tag, sort, search } = await searchParams;
+    console.log('AllProductsPage searchParams (awaited):', { tag, sort, search });
 
     // Fetch all products
-    const products = await getProducts({});
+    const products = await getProducts({ search });
 
     // Fetch categories for filter
-    const categories = await getCategories();
+    const categories = await getCategories({ publicOnly: true });
 
     // Calculate price range
     const prices = products.map(p => Number(p.price));
@@ -40,6 +41,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
         if (t === 'festive') return 'Festive Wear';
         if (t === 'bestseller') return 'Bestsellers';
         if (t === 'new') return 'New Arrivals';
+        if (search) return `Search Results for "${search}"`;
         if (tag) return `${tag.charAt(0).toUpperCase() + tag.slice(1)} Collection`;
         return 'All Collections';
     };
@@ -50,6 +52,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
         if (t === 'festive') return 'Celebrate in Style';
         if (t === 'bestseller') return 'Our Most Loved Pieces';
         if (t === 'new') return 'Fresh from Our Artisans';
+        if (search) return `Found ${products.length} matching products`;
         if (tag) return 'Curated Just For You';
         return 'The Entire Catalog';
     };

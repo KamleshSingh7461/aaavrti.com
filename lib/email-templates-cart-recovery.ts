@@ -73,7 +73,7 @@ export const cartRecoveryTemplate = (order: any, restoreLink: string) => {
 
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
             <p style="font-size: 13px; color: #666;">
-                Need help? <a href="https://aaavrti.shop/contact" style="color: #007185;">Contact our support team</a>
+                Need help? <a href="https://ournika.com/contact" style="color: #007185;">Contact our support team</a>
             </p>
         </div>
     `);

@@ -18,7 +18,12 @@ export function serialize(data: any): any {
     }
 
     // Handle ObjectIds
-    if (data._bsontype === 'ObjectId' || (data.constructor && data.constructor.name === 'ObjectId')) {
+    if (
+        data._bsontype === 'ObjectId' ||
+        data._bsontype === 'ObjectID' ||
+        (data.constructor && (data.constructor.name === 'ObjectId' || data.constructor.name === 'ObjectID')) ||
+        (typeof data === 'object' && data.buffer && data._bsontype) // Buffer-likeObjectId signature
+    ) {
         return data.toString();
     }
 

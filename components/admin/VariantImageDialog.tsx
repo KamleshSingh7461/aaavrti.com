@@ -81,7 +81,7 @@ export function VariantImageDialog({ productImages, variantImages, onVariantImag
                     </div>
                 )}
                 <span className="text-xs font-medium px-1">
-                    {variantImages.length > 0 ? `${variantImages.length} selected` : 'Add Images'}
+                    {variantImages.length > 0 ? `Manage Images (${variantImages.length})` : 'Add Variant Images'}
                 </span>
             </button>
 
@@ -143,7 +143,7 @@ export function VariantImageDialog({ productImages, variantImages, onVariantImag
                                         Select from Product Library
                                     </label>
                                     <span className="text-xs text-muted-foreground">
-                                        {variantImages.length} selected
+                                        {variantImages.length} selected (Multi-select allowed)
                                     </span>
                                 </div>
 

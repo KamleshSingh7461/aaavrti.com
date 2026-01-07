@@ -50,7 +50,7 @@ export default function AdminPortalLoginPage() {
                                 id="email"
                                 type="email"
                                 name="email"
-                                placeholder="admin@aaavrti.com"
+                                placeholder="admin@ournika.com"
                                 required
                                 className="flex h-12 w-full border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                             />

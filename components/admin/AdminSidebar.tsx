@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Tags, BarChart3, Tag, Palette, ClipboardList, Megaphone, Server, RotateCcw, Send, Search } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Tags, BarChart3, Tag, Palette, ClipboardList, Megaphone, Server, RotateCcw, Send, Search, Ruler } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -15,10 +15,11 @@ const navItems = [
     { href: '/admin/inventory', label: 'Inventory', icon: ClipboardList },
     { href: '/admin/marketing/banners', label: 'Banners', icon: Megaphone },
     { href: '/admin/marketing/newsletter', label: 'Newsletter', icon: Send },
-    { href: '/admin/marketing/coupons', label: 'Coupons', icon: Tag },
+    { href: '/admin/marketing/offers', label: 'Offers', icon: Tag },
     { href: '/admin/marketing/attribution', label: 'Attribution', icon: BarChart3 },
     { href: '/admin/marketing/seo', label: 'SEO', icon: Search },
     { href: '/admin/attributes', label: 'Attributes', icon: Palette },
+    { href: '/admin/size-guides', label: 'Size Guides', icon: Ruler }, // Imported icon
     { href: '/admin/categories', label: 'Categories', icon: Tags },
     { href: '/admin/customers', label: 'Customers', icon: Users },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
@@ -34,11 +35,12 @@ export function AdminSidebar({ className, onClose }: { className?: string, onClo
             <div className="h-16 flex items-center px-6 border-b border-border shrink-0">
                 <Link href="/">
                     <Image
-                        src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png"
-                        alt="Aaavrti"
-                        width={160}
-                        height={50}
-                        className="object-contain"
+                        src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767743051/OURNIKA_logo_exact_upgfui.svg"
+                        alt="Ournika Admin"
+                        width={150}
+                        height={40}
+                        className="object-contain h-8 w-auto"
+                        priority
                     />
                 </Link>
                 <span className="ml-2 font-serif text-lg font-bold text-primary">Admin</span>

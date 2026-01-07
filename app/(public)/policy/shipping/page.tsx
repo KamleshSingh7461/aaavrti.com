@@ -2,7 +2,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Shipping Policy | Aaavrti',
+    title: 'Shipping Policy | Ournika',
     description: 'Read our shipping and delivery policy.',
 };
 
@@ -15,7 +15,7 @@ export default function ShippingPage() {
             </div>
 
             <div className="prose prose-stone dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-                <p>At <strong>Aaavrti</strong>, we are committed to delivering your order accurately, in good condition, and always on time.</p>
+                <p>At <strong>Ournika</strong>, we are committed to delivering your order accurately, in good condition, and always on time.</p>
 
                 <h3 className="text-foreground font-semibold text-lg">1. Delivery Timeline</h3>
                 <p>We usually dispatch orders within <strong>24-48 hours</strong> of receiving the order. Deliveries within India generally take <strong>3-7 working days</strong> depending on your location.</p>

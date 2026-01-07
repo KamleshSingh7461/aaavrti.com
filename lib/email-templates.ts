@@ -88,7 +88,7 @@ export const baseTemplate = (content: string) => `
         <!-- Logo Header -->
         <div class="header">
             <a href="https://aaavrti.shop" style="text-decoration: none;">
-                <img src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767270151/gemini-2.5-flash-image_Generate_me_the_logo_with_high_quality_file_by_removing_the_transpaprent_backgro-0_ezbqis.png" alt="AAAVRTI" class="logo-img" style="vertical-align: middle;"/>
+                <img src="https://res.cloudinary.com/desdbjzzt/image/upload/v1767743051/OURNIKA_logo_exact_upgfui.svg" alt="Ournika" class="logo-img" style="vertical-align: middle;"/>
             </a>
         </div>
 
@@ -243,7 +243,7 @@ export const orderConfirmationTemplate = (order: any) => {
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
-            <a href="https://aaavrti.shop/track?order=${order.orderNumber}" class="btn" style="margin-right: 10px;">Track Your Order</a>
+            <a href="https://aaavrti.shop/track-order?order=${order.orderNumber}" class="btn" style="margin-right: 10px;">Track Your Order</a>
             <a href="https://aaavrti.shop/account/orders/${order.id}" class="btn">View or Manage Order</a>
         </div>
     `);

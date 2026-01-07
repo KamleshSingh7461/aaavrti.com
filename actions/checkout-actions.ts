@@ -262,14 +262,18 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
         let itemsWithDiscount: any[] = [];
 
         if (couponCode) {
-            const result = await validateCoupon(couponCode, realItems);
-            if (result.error) throw new Error(result.error);
-
-            finalSubtotal = result.subtotal!;
-            discountTotal = result.discountTotal!;
-            finalTotal = result.finalTotal!;
+            const validationResult = await validateCoupon(couponCode, realItems);
+            if (validationResult.error || !validationResult.result) throw new Error(validationResult.error || 'Invalid coupon');
 
             const totalVal = realItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+
+            discountTotal = validationResult.result.discount;
+            finalSubtotal = totalVal;
+            finalTotal = totalVal - discountTotal;
+
+            // Prevent negative logic just in case
+            if (finalTotal < 0) finalTotal = 0;
+
             itemsWithDiscount = realItems.map(item => {
                 const itemTotal = item.price * item.quantity;
                 const share = totalVal > 0 ? (itemTotal / totalVal) : 0;
@@ -280,6 +284,17 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
             itemsWithDiscount = realItems.map(i => ({ ...i, discount: 0 }));
             finalSubtotal = baseCalc.subtotal;
             finalTotal = baseCalc.subtotal;
+        }
+
+        // 3. Calculate Shipping
+        // "No Loss" Policy: Only free if Final Pay amount > 2000
+        const SHIPPING_THRESHOLD = 2000;
+        const SHIPPING_COST = 99;
+        let shippingCost = 0;
+
+        if (finalTotal < SHIPPING_THRESHOLD) {
+            shippingCost = SHIPPING_COST;
+            finalTotal += shippingCost;
         }
 
         // 3. DECREMENT STOCK
@@ -334,8 +349,8 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
         let couponId: string | undefined;
         if (couponCode) {
             const couponResult = await validateCoupon(couponCode, realItems);
-            if (couponResult.success && couponResult.couponId) {
-                couponId = couponResult.couponId;
+            if (couponResult.success && couponResult.result) {
+                couponId = couponResult.result.offer.id;
             }
         }
 
@@ -346,7 +361,7 @@ export async function createOrder(items: CartItem[], addressId: string, paymentM
             billingAddressId: addressId,
             subtotal: finalSubtotal,
             tax: 0,
-            shippingCost: 0,
+            shippingCost: shippingCost,
             total: finalTotal,
             couponCode: couponCode || null,
             discountTotal: discountTotal,

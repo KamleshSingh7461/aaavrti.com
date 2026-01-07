@@ -147,6 +147,84 @@ export class ShiprocketService {
 
         return res.json();
     }
+    /**
+     * createReturnOrder (Reverse Pickup)
+     * Creates a return order in Shiprocket for reverse pickup.
+     */
+    async createReturnOrder(returnRequest: any) {
+        if (!this.token) await this.authenticate({ email: process.env.SHIPROCKET_EMAIL || '', password: process.env.SHIPROCKET_PASSWORD || '' });
+
+        const order = returnRequest.orderId;
+        const address = order.shippingAddress; // Using shipping address as pickup address for customer
+
+        const payload = {
+            order_id: `RET-${returnRequest._id.toString().slice(-6).toUpperCase()}`, // Unique Return ID
+            order_date: new Date().toISOString().split('T')[0],
+            channel_id: "9340144", // Same channel
+            pickup_customer_name: address.name,
+            pickup_last_name: "",
+            pickup_address: address.street,
+            pickup_address_2: address.houseNo || "",
+            pickup_city: address.city,
+            pickup_state: address.state,
+            pickup_pincode: address.postalCode,
+            pickup_email: order.user?.email || "customer@example.com",
+            pickup_phone: address.phone,
+            shipping_customer_name: "Ournika Private Limited", // Returning to Warehouse
+            shipping_last_name: "",
+            shipping_address: "Warehouse Address", // You might want to make this dynamic or config
+            shipping_address_2: "",
+            shipping_city: "New Delhi",
+            shipping_pincode: "110001",
+            shipping_country: "India",
+            shipping_state: "Delhi",
+            shipping_email: "admin@ournika.com",
+            shipping_phone: "9999999999",
+            order_items: returnRequest.items.map((item: any) => {
+                // Find matching item in original order
+                // Note: returnRequest.items has 'orderItemId' which corresponds to order.items._id
+                const originalItem = order.items.find((oi: any) =>
+                    oi._id.toString() === item.orderItemId?.toString() ||
+                    oi.productId?.toString() === item.productId?.toString() // Fallback match
+                );
+
+                // Get Product details (Order usually populates productId)
+                const product = originalItem?.productId || {};
+
+                return {
+                    name: product.name_en || originalItem?.name || "Return Item",
+                    sku: product.sku || originalItem?.sku || "RET-SKU",
+                    units: item.quantity,
+                    selling_price: originalItem?.price || 0,
+                    discount: 0,
+                    qc_enable: true
+                };
+            }),
+            payment_method: "Prepaid", // Merchant pays for return usually
+            sub_total: returnRequest.refundAmount || 0,
+            length: 10, breadth: 10, height: 10, weight: 0.5
+        };
+
+        if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+            return {
+                order_id: 998877,
+                shipment_id: 554433,
+                status: 'RETURN_INITIATED',
+                awb_code: 'RET_MOCK_AWB'
+            };
+        }
+
+        const res = await fetch(`${SHIPROCKET_BASE_URL}/orders/create/return`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        return res.json();
+    }
 }
 
 export const shiprocket = new ShiprocketService();

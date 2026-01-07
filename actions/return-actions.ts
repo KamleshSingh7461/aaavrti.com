@@ -153,15 +153,38 @@ export async function updateReturnStatus(requestId: string, status: string, comm
         }
 
         if (status === 'APPROVED' && request.status !== 'APPROVED') {
-            // Increment stock
-            const order = request.orderId;
+            // 1. Deep populate to get Product SKU/Helper for Shiprocket
+            // We need to re-fetch or populate the request we already have?
+            // Existing 'request' has 'orderId' populated but not deep 'items.productId'
+            // Let's re-fetch or rely on manual product fetch if needed.
+            // Actually, cleanest is to fetch order with deep populate here.
+
+            const OrderModel = require('@/lib/models/Order').Order; // Commonjs fix or import
+            const fullOrder = await OrderModel.findById(request.orderId._id).populate({ path: 'items.productId' });
+
+            // Re-assign the full order to request for the helper
+            request.orderId = fullOrder;
+
+            // 2. Increment stock
+            const order = fullOrder;
             for (const item of request.items) {
                 const orderItem = order.items.id(item.orderItemId);
                 if (orderItem?.productId) {
-                    await Product.findByIdAndUpdate(orderItem.productId, {
+                    await Product.findByIdAndUpdate(orderItem.productId._id || orderItem.productId, {
                         $inc: { stock: item.quantity }
                     });
                 }
+            }
+
+            // 3. Create Reverse Pickup in Shiprocket
+            try {
+                const { shiprocket } = await import('@/lib/services/shiprocket');
+                console.log('[Return] Creating Shiprocket Reverse Pickup...');
+                const returnOrder = await shiprocket.createReturnOrder(request);
+                console.log('[Return] Shiprocket Response:', returnOrder);
+            } catch (srError) {
+                console.error('[Return] Failed to create Shiprocket return:', srError);
+                // We do not block the approval, just log error
             }
         }
 

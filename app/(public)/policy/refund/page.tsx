@@ -2,7 +2,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Cancellation & Refund Policy | Aaavrti',
+    title: 'Cancellation & Refund Policy | Ournika',
     description: 'Read our cancellation and refund policy.',
 };
 
@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
 
             <div className="prose prose-stone dark:prose-invert max-w-none space-y-6">
                 <p>
-                    <strong>KAMLESH KUMAR SINGH</strong> (operating as Aaavrti) believes in helping its customers as far as possible, and has therefore a liberal cancellation policy. Under this policy:
+                    <strong>Ournika Private Limited</strong> believes in helping its customers as far as possible, and has therefore a liberal cancellation policy. Under this policy:
                 </p>
 
                 <section>
@@ -66,7 +66,7 @@ export default function RefundPolicyPage() {
             <div className="bg-secondary/20 p-6 rounded-lg border border-border mt-8">
                 <h3 className="font-semibold mb-2">Need help?</h3>
                 <p className="text-sm text-muted-foreground">
-                    Contact us at <a href="mailto:support@aaavrti.com" className="text-primary hover:underline">support@aaavrti.com</a> for any questions related to refunds and cancellations.
+                    Contact us at <a href="mailto:support@ournika.com" className="text-primary hover:underline">support@ournika.com</a> for any questions related to refunds and cancellations.
                 </p>
             </div>
         </div>

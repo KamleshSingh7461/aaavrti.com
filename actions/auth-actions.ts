@@ -1,248 +1,122 @@
-
 'use server';
 
-import { signIn, signOut } from '@/auth';
-import { AuthError } from 'next-auth';
-import { redirect } from 'next/navigation';
 import dbConnect from '@/lib/db';
+import { Otp } from '@/lib/models/Otp';
 import { User } from '@/lib/models/User';
-import bcrypt from 'bcryptjs';
-import { z } from 'zod';
-
-// Schema for validation
-const SignUpSchema = z.object({
-    name: z.string().min(2),
-    email: z.string().email(),
-    password: z.string().min(6),
-    phone: z.string().min(10, "Phone number must be at least 10 digits"),
-});
-
-// Admin authentication - validates admin role
-export async function authenticateAdmin(
-    prevState: string | undefined,
-    formData: FormData,
-) {
-    try {
-        await signIn('credentials', {
-            email: formData.get('email') as string,
-            password: formData.get('password') as string,
-            redirect: false,
-        });
-
-        // Verify user is admin
-        await dbConnect();
-        const email = formData.get('email') as string;
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return 'Invalid credentials.';
-        }
-
-        if (user.role !== 'ADMIN') {
-            return 'Access denied. Admin credentials required.';
-        }
-
-        const redirectPath = formData.get('redirectTo') as string | null;
-
-        if (redirectPath) {
-            redirect(redirectPath);
-        } else {
-            redirect('/admin/dashboard');
-        }
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case 'CredentialsSignin':
-                    return 'Invalid credentials.';
-                default:
-                    return 'Something went wrong.';
-            }
-        }
-        throw error;
-    }
-}
-
-// Customer authentication
-export async function authenticateCustomer(
-    prevState: string | undefined,
-    formData: FormData,
-) {
-    try {
-        const email = formData.get('email') as string;
-        await dbConnect();
-        const user = await User.findOne({ email });
-
-        if (user && !user.emailVerified) {
-            return 'Please verify your email first.';
-        }
-
-        await signIn('credentials', {
-            email: formData.get('email') as string,
-            password: formData.get('password') as string,
-            redirect: false,
-        });
-
-        redirect('/account');
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case 'CredentialsSignin':
-                    return 'Invalid credentials.';
-                default:
-                    return 'Something went wrong.';
-            }
-        }
-        throw error;
-    }
-}
-
 import { sendEmail } from '@/lib/email-service';
-import { otpTemplate } from '@/lib/email-templates';
-import { sendOTP } from '@/lib/notifications';
+import bcrypt from 'bcryptjs';
+import { signIn, signOut } from '@/auth';
 
-export async function registerUser(prevState: string | undefined, formData: FormData) {
-    const validatedFields = SignUpSchema.safeParse(Object.fromEntries(formData.entries()));
+function generateOtp() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
-    if (!validatedFields.success) {
-        return 'Missing Fields. Failed to Register.';
-    }
-
-    const { email, password, name, phone } = validatedFields.data;
+export async function sendOtp(email: string) {
+    if (!email) return { error: 'Email is required' };
 
     try {
         await dbConnect();
 
-        // Check if user exists
-        const existingUser = await User.findOne({ email });
+        // 1. Check if user exists (for login vs signup distinction if needed, but for now we just send OTP)
+        // If we want to block signup for existing users in "register" flow, we can check.
+        // But sendOtp is generic.
 
-        if (existingUser) {
-            if (existingUser.emailVerified) {
-                return 'User already exists.';
-            } else {
-                // User exists but not verified, resend OTP logic could be here, but for now just error or overwrite?
-                // Let's allow overwrite if not verified for simplicity or handle as "Account exists but not verified"
-                // For security, standard practice is "User already exists", but for UX:
-                // We will update the existing unverified user with new details (or just new OTP)
-            }
-        }
+        // 2. Clear old OTPs
+        await Otp.deleteMany({ email });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // 3. Generate New OTP
+        const otp = generateOtp();
 
-        // Generate OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        // 4. Save to DB
+        await Otp.create({ email, otp });
 
-        if (existingUser && !existingUser.emailVerified) {
-            existingUser.password = hashedPassword;
-            existingUser.name = name;
-            existingUser.otp = otp;
-            existingUser.otpExpiry = otpExpiry;
-            await existingUser.save();
-        } else if (!existingUser) {
-            await User.create({
-                name,
-                email,
-                password: hashedPassword,
-                phone, // Save phone number
-                otp,
-                otpExpiry
-            });
-        } else {
-            return 'User already exists.';
-        }
-
-        // Send Email
-        const emailResult = await sendEmail({
+        // 5. Send Email
+        await sendEmail({
             to: email,
-            subject: 'Verify your Aaavrti Account',
-            html: otpTemplate(otp),
-            category: 'OTP'
+            subject: 'Your Login Verification Code - Ournika',
+            category: 'OTP',
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #000;">Ournika Verification</h2>
+                    <p>Your verification code is:</p>
+                    <h1 style="font-size: 32px; letter-spacing: 5px; background: #f4f4f5; padding: 20px; text-align: center; border-radius: 8px;">${otp}</h1>
+                    <p>This code will expire in 5 minutes.</p>
+                    <p style="color: #666; font-size: 12px; margin-top: 20px;">If you didn't request this, please ignore this email.</p>
+                </div>
+            `
         });
 
-        // Send OTP via WhatsApp (Fire and forget, don't block registration if it fails)
-        try {
-            await sendOTP(phone, email, otp, name);
-        } catch (waError) {
-            console.error('Failed to send WhatsApp OTP:', waError);
-            // Continue execution, email is the primary method
-        }
-
-        if (!emailResult.success) {
-            return emailResult.error || 'Failed to send verification email.';
-        }
-
-        // Redirect directly from server action
-        // redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
+        return { success: true };
     } catch (error) {
-        console.error('Registration Error:', error);
-        return 'Database Error: Failed to Register.';
+        console.error('Send OTP Error:', error);
+        return { error: 'Failed to send OTP. Please try again.' };
     }
-
-    redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
 }
 
 export async function verifyOtp(email: string, otp: string) {
     try {
         await dbConnect();
-        const user = await User.findOne({ email });
+        const record = await Otp.findOne({ email, otp });
 
-        if (!user) {
-            return { success: false, message: 'User not found.' };
+        if (!record) {
+            return { error: 'Invalid or expired OTP' };
         }
 
-        if (user.emailVerified) {
-            return { success: true, message: 'Already verified.' };
-        }
-
-        if (user.otp !== otp) {
-            return { success: false, message: 'Invalid OTP.' };
-        }
-
-        if (new Date() > user.otpExpiry) {
-            return { success: false, message: 'OTP Expired.' };
-        }
-
-        user.emailVerified = new Date();
-        user.otp = undefined;
-        user.otpExpiry = undefined;
-        await user.save();
+        // OTP is valid
+        // We delete it after usage to prevent replay
+        await Otp.deleteOne({ _id: record._id });
 
         return { success: true };
     } catch (error) {
-        console.error('Verification Error:', error);
-        return { success: false, message: 'Verification failed.' };
+        console.error('Verify OTP Error:', error);
+        return { error: 'Verification failed' };
     }
 }
 
-export async function resendOtp(email: string) {
+export async function registerWithOtp(data: { email: string, name: string, otp: string }) {
+    const { email, name, otp } = data;
+
     try {
         await dbConnect();
-        const user = await User.findOne({ email });
 
-        if (!user) return { success: false, message: 'User not found.' };
-        if (user.emailVerified) return { success: false, message: 'Already verified.' };
+        // 1. Verify OTP first
+        const verification = await verifyOtp(email, otp);
+        if (verification.error) return verification;
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+        // 2. Check existing user
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return { error: 'User already exists with this email. Please Login.' };
+        }
 
-        user.otp = otp;
-        user.otpExpiry = otpExpiry;
-        await user.save();
+        // 3. Create User
+        // Note: Passwordless users don't need a password hash.
+        // But if your User model requires it, we might set a dummy one or make it optional.
+        // Let's assume schema allows optional or we set a random secure string.
+        const dummyPassword = await bcrypt.hash(Math.random().toString(36), 10);
 
-        await sendEmail({
-            to: email,
-            subject: 'Verify your Aaavrti Account',
-            html: otpTemplate(otp),
-            category: 'OTP'
+        await User.create({
+            name,
+            email,
+            password: dummyPassword,
+            role: 'CUSTOMER',
+            provider: 'email'
         });
 
-        return { success: true, message: 'OTP resent.' };
+        // 4. Auto Login
+        // Note: We can't use signIn directly in server action for redirect sometimes causing issues,
+        // but typically we can if we let it handle the flow.
+        // However, the client is calling this.
+        // We will return success, and client calls signIn with Credentials (OTP flow).
+        // Wait, Credentials provider needs to know this IS an OTP login.
 
+        return { success: true };
     } catch (error) {
-        return { success: false, message: 'Failed to resend OTP.' };
+        console.error('Registration Error:', error);
+        return { error: 'Failed to create account.' };
     }
 }
 
 export async function handleSignOut() {
-    await signOut({ redirectTo: "/" });
+    await signOut({ redirectTo: '/' });
 }

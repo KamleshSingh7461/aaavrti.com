@@ -17,25 +17,60 @@ export const Banner = models.Banner || model('Banner', BannerSchema);
 
 // --- Offer ---
 const OfferSchema = new Schema({
+    // Basic Info
     title: String,
     description: String,
     code: { type: String, unique: true, required: true },
-    type: { type: String, default: "PERCENTAGE" }, // PERCENTAGE, FIXED
-    value: { type: Number, required: true },
-    minAmount: { type: Number, default: 0 },
-    maxDiscount: { type: Number }, // Cap
+    name: String, // Display name for offer
+
+    // Offer Type - EXPANDED
+    type: {
+        type: String,
+        default: "PERCENTAGE",
+        enum: ["PERCENTAGE", "FIXED", "BUNDLE", "BOGO", "MIX_MATCH", "QUANTITY_DISCOUNT", "TIERED"]
+    },
+
+    // Simple Discount Fields (existing)
+    value: { type: Number, required: true }, // Percentage or fixed amount
+    minAmount: { type: Number, default: 0 }, // Minimum cart value
+    maxDiscount: { type: Number }, // Cap on discount amount
+
+    // Bundle/BOGO Fields (NEW)
+    bundleQuantity: { type: Number }, // e.g., 3 for "Buy 3"
+    bundlePrice: { type: Number }, // e.g., 1999 for "@ ₹1999"
+    buyQuantity: { type: Number }, // e.g., 2 for "Buy 2"
+    getQuantity: { type: Number }, // e.g., 1 for "Get 1"
+    getDiscount: { type: Number, default: 100 }, // Percentage discount on free items (100 = free)
+
+    // Tiered Pricing (NEW)
+    tiers: { type: String }, // JSON: [{ quantity: 2, discount: 10 }, { quantity: 3, discount: 20 }]
+
+    // Validity
     startDate: Date,
     endDate: Date,
     usageLimit: Number,
     usedCount: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
 
-    // Targeting
-    applicableType: { type: String, default: "ALL" }, // ALL, CATEGORY, PRODUCT
-    applicableIds: { type: String, default: "[]" }, // JSON String in schema, but we should treat as Array of Strings in practice if possible, or keep as string to match Prisma
+    // Targeting - EXPANDED
+    applicableType: {
+        type: String,
+        default: "ALL",
+        enum: ["ALL", "CATEGORY", "PRODUCT", "PRICE_RANGE", "COMBINED"]
+    },
+    applicableIds: { type: String, default: "[]" }, // JSON array of category/product IDs
+
+    // Price Range Targeting (NEW)
+    minPrice: { type: Number }, // Minimum product price to qualify
+    maxPrice: { type: Number }, // Maximum product price to qualify
+
+    // Display Settings (NEW)
+    badgeText: { type: String }, // Custom badge text, e.g., "Buy 3 @ ₹1999"
+    priority: { type: Number, default: 0 }, // Higher priority offers shown first
 }, { timestamps: true });
 
 export const Offer = models.Offer || model('Offer', OfferSchema);
+
 
 
 // --- Coupon ---

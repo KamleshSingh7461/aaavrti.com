@@ -1,4 +1,4 @@
-# Deployment Guide - Aaavrti
+# Deployment Guide - Ournika
 
 Your application is **Production Ready** (Frontend Prototype).
 Since we are using **Mock Data**, you can deploy this largely as a static/hybrid site without needing a complex backend database connection immediately.
@@ -11,7 +11,7 @@ The easiest way to deploy Next.js apps.
 
 1.  Open your terminal in this folder:
     ```powershell
-    cd c:\Users\kamle\aaavrti.com
+    cd c:\Users\kamle\ournika.com
     ```
 2.  Install Vercel CLI (if not installed):
     ```powershell
@@ -25,11 +25,11 @@ The easiest way to deploy Next.js apps.
     - Set up and deploy? **Yes**
     - Scope? **[Your Name]**
     - Link to existing project? **No**
-    - Project Name? **aaavrti-ecommerce**
+    - Project Name? **ournika-ecommerce**
     - Directory? **./**
     - Build settings? **Default** (Just press Enter)
 
-5.  **Done!** You will get a `https://aaavrti-ecommerce.vercel.app` link to share with your customer.
+5.  **Done!** You will get a `https://ournika-ecommerce.vercel.app` link to share with your customer.
 
 ### Option 2: GitHub + Vercel Dashboard
 

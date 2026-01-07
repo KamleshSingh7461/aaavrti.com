@@ -7,7 +7,7 @@ import { FadeIn } from '@/components/ui/motion';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'New Arrivals | Aaavrti',
+    title: 'New Arrivals | Ournika',
     description: 'Discover the latest additions to our authentic Indian heritage collection.'
 };
 

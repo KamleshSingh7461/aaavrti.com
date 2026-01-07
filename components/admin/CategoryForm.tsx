@@ -20,6 +20,7 @@ export function CategoryForm({ category, categories, parentId: initialParentId, 
     const [slug, setSlug] = useState(category?.slug || '');
     const [parentId, setParentId] = useState(category?.parentId || initialParentId || '');
     const [image, setImage] = useState(category?.image || '');
+    const [isActive, setIsActive] = useState(category?.isActive ?? true);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [autoSlug, setAutoSlug] = useState(!category);
@@ -44,6 +45,7 @@ export function CategoryForm({ category, categories, parentId: initialParentId, 
         formData.append('slug', slug);
         formData.append('parentId', parentId);
         formData.append('image', image);
+        formData.append('isActive', String(isActive));
 
         try {
             const result = isEdit
@@ -184,6 +186,20 @@ export function CategoryForm({ category, categories, parentId: initialParentId, 
                         <p className="text-xs text-muted-foreground mt-1.5">
                             Leave empty to create a top-level category
                         </p>
+                    </div>
+
+                    {/* Active Status */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={isActive}
+                            onChange={(e) => setIsActive(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <label htmlFor="isActive" className="text-sm font-medium">
+                            Active (Visible in storefront)
+                        </label>
                     </div>
 
                     {/* Actions */}

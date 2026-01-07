@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Aaavrti Luxe Palette */
+  /* Ournika Luxe Palette */
   /* Backgrounds: Warm, Rice Paper & Deep Obsidian */
   --color-background: #F9F8F6;
   --color-foreground: #1A1A1A;
@@ -29,8 +29,8 @@
   /* Sharp, premium corners */
 
   /* Fonts */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
-  --font-serif: var(--font-cormorant), ui-serif, Georgia;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+  --font-serif: var(--font-outfit), ui-serif, Georgia;
 }
 
 @layer base {

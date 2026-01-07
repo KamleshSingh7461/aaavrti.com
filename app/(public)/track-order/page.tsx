@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
-    title: 'Track Your Order | Aaavrti',
+    title: 'Track Your Order | Ournika',
     description: 'Track your order status and delivery information',
 };
 
@@ -24,7 +24,7 @@ export default async function TrackPage({ searchParams }: TrackPageProps) {
                 <div className="container mx-auto px-4 py-20">
                     <div className="max-w-md mx-auto">
                         <h1 className="text-3xl font-serif mb-8">Track Your Order</h1>
-                        <form action="/track" method="get" className="space-y-4">
+                        <form action="/track-order" method="get" className="space-y-4">
                             <div>
                                 <label htmlFor="order" className="block text-sm font-medium mb-2">
                                     Order Number
@@ -68,7 +68,7 @@ export default async function TrackPage({ searchParams }: TrackPageProps) {
                             We couldn't find an order with number: <strong>{orderNumber}</strong>
                         </p>
                         <Link
-                            href="/track"
+                            href="/track-order"
                             className="inline-flex items-center text-primary hover:underline"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -107,7 +107,7 @@ export default async function TrackPage({ searchParams }: TrackPageProps) {
         <div className="min-h-screen bg-background">
             <div className="container mx-auto px-4 py-12 lg:py-20">
                 <Link
-                    href="/track"
+                    href="/track-order"
                     className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-8"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -146,8 +146,8 @@ export default async function TrackPage({ searchParams }: TrackPageProps) {
                                             <div key={step.status} className="flex flex-col items-center">
                                                 <div
                                                     className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all ${step.completed
-                                                            ? 'bg-primary text-primary-foreground'
-                                                            : 'bg-muted text-muted-foreground'
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-muted text-muted-foreground'
                                                         }`}
                                                 >
                                                     <Icon className="h-5 w-5" />

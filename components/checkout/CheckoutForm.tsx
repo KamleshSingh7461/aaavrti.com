@@ -107,7 +107,7 @@ export function CheckoutForm({ initialAddresses, user }: CheckoutFormProps) {
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                     amount: rzpRes.amount,
                     currency: rzpRes.currency,
-                    name: 'Aaavrti',
+                    name: 'Ournika',
                     description: 'Order Payment',
                     order_id: rzpRes.orderId,
                     handler: async function (response: any) {

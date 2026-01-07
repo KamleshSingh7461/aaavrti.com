@@ -13,7 +13,7 @@ interface CartStore {
     discountAmount: number; // Absolute amount
     couponCode: string | null;
 
-    addItem: (product: Product & { productId?: string }) => void;
+    addItem: (product: Product & { productId?: string; quantity?: number }) => void;
     removeItem: (productId: string) => void;
     updateQuantity: (productId: string, quantity: number) => void;
     clearCart: () => void;
@@ -38,19 +38,20 @@ export const useCart = create<CartStore>()(
             addItem: (product) => {
                 const currentItems = get().items;
                 const existingItem = currentItems.find((item) => item.id === product.id);
+                const quantityToAdd = product.quantity || 1;
 
                 if (existingItem) {
                     set({
                         items: currentItems.map((item) =>
                             item.id === product.id
-                                ? { ...item, quantity: item.quantity + 1 }
+                                ? { ...item, quantity: item.quantity + quantityToAdd }
                                 : item
                         ),
                         isOpen: true, // Open cart on add
                     });
                 } else {
                     set({
-                        items: [...currentItems, { ...product, quantity: 1 }],
+                        items: [...currentItems, { ...product, quantity: quantityToAdd }],
                         isOpen: true,
                     });
                 }

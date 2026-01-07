@@ -1,8 +1,8 @@
-# Aaavrti - Modern Indian Heritage Ecommerce
+# Ournika - Modern Indian Heritage Ecommerce
 
-**Aaavrti** is a premium e-commerce platform dedicated to authentic Indian heritage and handloom products. It features a "Modern Heritage" aesthetic, bilingual support (English/Hindi), and a seamless shopping experience.
+**Ournika** is a premium e-commerce platform dedicated to authentic Indian heritage and handloom products. It features a "Modern Heritage" aesthetic, bilingual support (English/Hindi), and a seamless shopping experience.
 
-![Aaavrti Logo](/public/aaavrti_logo.png)
+![Ournika Logo](/public/ournika_logo.png)
 
 ## 🚀 Features
 

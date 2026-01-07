@@ -26,24 +26,56 @@ export default async function OfferDetailPage({ params }: { params: Promise<{ co
         notFound();
     }
 
-    // Fetch eligible products
+    // Fetch eligible products based on offer targeting
     let products: any[] = [];
+    let query: any = { status: 'ACTIVE' };
 
     if (offer.applicableType === 'ALL') {
-        products = await Product.find({ status: 'ACTIVE' })
-            .populate('category') // assuming ref 'Category' in Product model
+        // All products
+        products = await Product.find(query)
+            .populate('category')
             .sort({ createdAt: -1 })
             .lean();
     } else if (offer.applicableType === 'CATEGORY' && offer.applicableIds) {
+        // Specific categories
         const ids = JSON.parse(offer.applicableIds || '[]');
-        products = await Product.find({ category: { $in: ids }, status: 'ACTIVE' })
+        query.category = { $in: ids };
+        products = await Product.find(query)
             .populate('category')
             .sort({ createdAt: -1 })
             .lean();
     } else if (offer.applicableType === 'PRODUCT' && offer.applicableIds) {
+        // Specific products
         const ids = JSON.parse(offer.applicableIds || '[]');
-        products = await Product.find({ _id: { $in: ids }, status: 'ACTIVE' })
+        query._id = { $in: ids };
+        products = await Product.find(query)
             .populate('category')
+            .lean();
+    } else if (offer.applicableType === 'PRICE_RANGE') {
+        // Price range filtering
+        if (offer.minPrice !== undefined && offer.minPrice !== null) {
+            query.price = { ...query.price, $gte: offer.minPrice };
+        }
+        if (offer.maxPrice !== undefined && offer.maxPrice !== null) {
+            query.price = { ...query.price, $lte: offer.maxPrice };
+        }
+        products = await Product.find(query)
+            .populate('category')
+            .sort({ createdAt: -1 })
+            .lean();
+    } else if (offer.applicableType === 'COMBINED' && offer.applicableIds) {
+        // Category + Price range
+        const ids = JSON.parse(offer.applicableIds || '[]');
+        query.category = { $in: ids };
+        if (offer.minPrice !== undefined && offer.minPrice !== null) {
+            query.price = { ...query.price, $gte: offer.minPrice };
+        }
+        if (offer.maxPrice !== undefined && offer.maxPrice !== null) {
+            query.price = { ...query.price, $lte: offer.maxPrice };
+        }
+        products = await Product.find(query)
+            .populate('category')
+            .sort({ createdAt: -1 })
             .lean();
     }
 

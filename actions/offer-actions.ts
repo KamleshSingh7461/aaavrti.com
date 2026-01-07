@@ -1,299 +1,333 @@
 'use server';
 
 import dbConnect from '@/lib/db';
-import { Coupon } from '@/lib/models/Marketing';
+import { Offer } from '@/lib/models/Marketing';
+import { serialize } from '@/lib/serialize';
 import { revalidatePath } from 'next/cache';
-import { calculatePricing } from '@/lib/pricing';
-import { auth } from '@/auth';
+import {
+    calculateOfferDiscount,
+    findBestOffer,
+    getApplicableOffers as getApplicableOffersFromCalc,
+    type CartItem,
+    type Offer as OfferType,
+    type OfferResult
+} from '@/lib/offer-calculator';
 
 /**
- * MIGRATION NOTE: This file now uses the Coupon model instead of Offer
- * Function names remain the same for backward compatibility with existing cart/checkout code
+ * Get all active offers
  */
-
-export async function getOffers() {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return [];
-
+export async function getActiveOffers() {
     try {
         await dbConnect();
-        const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
-
-        // Map Coupon fields to match old Offer structure for compatibility
-        return coupons.map((coupon: any) => ({
-            id: coupon._id.toString(),
-            code: coupon.code,
-            type: coupon.type,
-            value: Number(coupon.value),
-            minAmount: Number(coupon.minOrderValue || 0),
-            maxDiscount: coupon.maxDiscount ? Number(coupon.maxDiscount) : null,
-            usageLimit: coupon.usageLimit,
-            usedCount: coupon.usageCount,
-            isActive: coupon.active,
-            startDate: coupon.validFrom.toISOString(),
-            endDate: coupon.validUntil.toISOString(),
-            title: coupon.description,
-            description: coupon.description,
-            applicableType: 'ALL', // Coupons apply to all products
-            applicableIds: '[]',
-            createdAt: coupon.createdAt.toISOString(),
-            updatedAt: coupon.updatedAt.toISOString(),
-        }));
-    } catch (e) {
-        console.error('Failed to get offers:', e);
+        const offers = await Offer.find({ isActive: true })
+            .sort({ priority: -1, createdAt: -1 })
+            .lean();
+        return serialize(offers);
+    } catch (error) {
+        console.error('Error fetching active offers:', error);
         return [];
     }
 }
 
 /**
- * Get applicable offers for a specific product
- * Now uses Coupon model
+ * Get offer by code
  */
-// ... keep existing code ...
-
-/**
- * Get public coupons for the cart display
- * Filters only active and valid coupons
- */
-export async function getPublicCoupons() {
-    const now = new Date();
-
+export async function getOfferByCode(code: string) {
     try {
         await dbConnect();
-        const coupons = await Coupon.find({
-            active: true,
-            validFrom: { $lte: now },
-            validUntil: { $gte: now }
+        const offer = await Offer.findOne({
+            code: code.toUpperCase(),
+            isActive: true
         }).lean();
 
-        // Filter coupons with usage limits
-        const availableCoupons = coupons.filter((coupon: any) => {
-            if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-                return false;
-            }
-            return true;
-        });
+        if (!offer) return null;
 
-        // Serialize for client
-        return availableCoupons.map((coupon: any) => ({
-            id: coupon._id.toString(),
-            code: coupon.code,
-            type: coupon.type,
-            value: Number(coupon.value),
-            minAmount: Number(coupon.minOrderValue || 0),
-            maxDiscount: coupon.maxDiscount ? Number(coupon.maxDiscount) : null,
-            endDate: coupon.validUntil.toISOString(),
-        }));
-    } catch (e) {
-        console.error('Failed to get public coupons:', e);
-        return [];
-    }
-}
+        // Check if expired
+        if (offer.endDate && new Date(offer.endDate) < new Date()) {
+            return null;
+        }
 
-export async function getApplicableOffers(productId: string, categoryId: string) {
-    // ... keep existing code ...
-    const now = new Date();
-
-    try {
-        await dbConnect();
-        const coupons = await Coupon.find({
-            active: true,
-            validFrom: { $lte: now },
-            validUntil: { $gte: now }
-        }).lean();
-
-        // Filter coupons with usage limits
-        const applicableCoupons = coupons.filter((coupon: any) => {
-            if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-                return false;
-            }
-            return true;
-        });
-
-        // Serialize for client
-        return applicableCoupons.map((coupon: any) => ({
-            id: coupon._id.toString(),
-            code: coupon.code,
-            type: coupon.type,
-            value: Number(coupon.value),
-            minAmount: Number(coupon.minOrderValue || 0),
-            maxDiscount: coupon.maxDiscount ? Number(coupon.maxDiscount) : null,
-            endDate: coupon.validUntil.toISOString(),
-        }));
-    } catch (e) {
-        console.error('Failed to get applicable offers:', e);
-        return [];
-    }
-}
-
-export async function createOffer(data: any) {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return { error: 'Unauthorized' };
-
-    try {
-        await dbConnect();
-        // Create using Coupon model
-        await Coupon.create({
-            code: data.code.toUpperCase(),
-            type: data.type,
-            value: data.value,
-            minOrderValue: data.minAmount || 0,
-            maxDiscount: data.maxDiscount,
-            usageLimit: data.usageLimit,
-            validFrom: data.startDate || new Date(),
-            validUntil: data.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-            description: data.title || data.description,
-            active: true
-        });
-
-        revalidatePath('/admin/marketing/coupons');
-        revalidatePath('/admin/offers');
-        return { success: true };
-    } catch (e: any) {
-        if (e.code === 11000) return { error: 'Coupon code already exists' };
-        return { error: 'Failed to create offer' };
-    }
-}
-
-export async function toggleOfferStatus(id: string, isActive: boolean) {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return { error: 'Unauthorized' };
-
-    try {
-        await dbConnect();
-        await Coupon.findByIdAndUpdate(id, { active: isActive });
-        revalidatePath('/admin/marketing/coupons');
-        revalidatePath('/admin/offers');
-        return { success: true };
-    } catch (e) {
-        return { error: 'Failed to toggle status' };
-    }
-}
-
-export async function deleteOffer(id: string) {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return { error: 'Unauthorized' };
-
-    try {
-        await dbConnect();
-        await Coupon.findByIdAndDelete(id);
-        revalidatePath('/admin/marketing/coupons');
-        revalidatePath('/admin/offers');
-        return { success: true };
-    } catch (e: any) {
-        return { error: 'Failed to delete coupon' };
-    }
-}
-
-export async function getOffer(id: string) {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return null;
-
-    try {
-        await dbConnect();
-        const coupon = await Coupon.findById(id).lean();
-
-        if (!coupon) return null;
-
-        return {
-            id: coupon._id.toString(),
-            code: coupon.code,
-            type: coupon.type,
-            value: Number(coupon.value),
-            minAmount: Number(coupon.minOrderValue || 0),
-            maxDiscount: coupon.maxDiscount ? Number(coupon.maxDiscount) : null,
-            usageLimit: coupon.usageLimit,
-            startDate: coupon.validFrom.toISOString().split('T')[0],
-            endDate: coupon.validUntil.toISOString().split('T')[0],
-            title: coupon.description,
-            description: coupon.description,
-            applicableType: 'ALL',
-            applicableIds: '[]',
-        };
-    } catch (e) {
+        return serialize(offer);
+    } catch (error) {
+        console.error('Error fetching offer:', error);
         return null;
     }
 }
 
-export async function updateOffer(id: string, data: any) {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return { error: 'Unauthorized' };
-
+/**
+ * Get applicable offers for a specific product (Product Page)
+ */
+export async function getApplicableOffers(productId: string, categoryId: string) {
     try {
         await dbConnect();
-        await Coupon.findByIdAndUpdate(id, {
-            code: data.code.toUpperCase(),
-            type: data.type,
-            value: data.value,
-            minOrderValue: data.minAmount || 0,
-            maxDiscount: data.maxDiscount,
-            usageLimit: data.usageLimit,
-            validFrom: data.startDate ? new Date(data.startDate) : undefined,
-            validUntil: data.endDate ? new Date(data.endDate) : undefined,
-            description: data.title || data.description
+
+        // fetch active offers
+        const offers = await Offer.find({ isActive: true }).lean();
+
+        // Filter in memory for now (simple logic)
+        // Check applicableType: ALL, CATEGORY, PRODUCT
+        const validOffers = offers.filter((offer: any) => {
+            // 1. Check Dates
+            if (offer.startDate && new Date(offer.startDate) > new Date()) return false;
+            // endDate check handled in verify, but good to check here too
+            if (offer.endDate && new Date(offer.endDate) < new Date()) return false;
+
+            // 2. Check Applicability
+            if (offer.applicableType === 'ALL') return true;
+
+            if (offer.applicableType === 'CATEGORY') {
+                // Check if categoryId matches or is in list
+                // Offer.targetIds stores category IDs
+                return offer.targetIds?.some((id: string) => id.toString() === categoryId.toString());
+            }
+
+            if (offer.applicableType === 'PRODUCT') {
+                return offer.targetIds?.some((id: string) => id.toString() === productId.toString());
+            }
+
+            return false;
         });
 
-        revalidatePath('/admin/marketing/coupons');
-        revalidatePath('/admin/offers');
-        return { success: true };
-    } catch (e: any) {
-        console.error(e);
-        if (e.code === 11000) return { error: 'Coupon code already exists' };
-        return { error: 'Failed to update offer' };
+        return serialize(validOffers.map((o: any) => ({
+            id: o._id.toString(),
+            code: o.code,
+            type: o.offerType,
+            value: o.offerValue,
+            minAmount: o.minOrderAmount,
+            maxDiscount: o.maxDiscountAmount,
+            endDate: o.endDate
+        })));
+
+    } catch (error) {
+        console.error('Error fetching applicable offers:', error);
+        return [];
     }
 }
 
 /**
- * Validates a coupon and returns the pricing result including prorated discounts.
- * Now uses Coupon model with enhanced validation
+ * Get applicable offers for cart items
  */
-export async function validateCoupon(code: string, cartItems: { id: string, productId?: string, price: number, quantity: number }[]) {
-    if (!code) return { error: 'No code provided' };
-
+export async function getApplicableOffersForCart(cartItems: CartItem[]) {
     try {
-        await dbConnect();
-        const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+        const offers = await getActiveOffers();
+        const applicableOffers = getApplicableOffersFromCalc(cartItems, offers as OfferType[]);
+        return applicableOffers;
+    } catch (error) {
+        console.error('Error getting applicable offers:', error);
+        return [];
+    }
+}
 
-        if (!coupon) return { error: 'Invalid coupon code' };
-        if (!coupon.active) return { error: 'Coupon is inactive' };
+/**
+ * Calculate best offer for cart
+ */
+export async function calculateBestOfferForCart(cartItems: CartItem[]) {
+    try {
+        const offers = await getActiveOffers();
+        const bestOffer = findBestOffer(cartItems, offers as OfferType[]);
+        return bestOffer;
+    } catch (error) {
+        console.error('Error calculating best offer:', error);
+        return null;
+    }
+}
 
-        // Check Limits
-        if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-            return { error: 'Coupon usage limit reached' };
+/**
+ * Apply offer to cart (validate and calculate)
+ */
+export async function applyOfferToCart(offerCode: string, cartItems: CartItem[]): Promise<{
+    success: boolean;
+    error?: string;
+    result?: OfferResult;
+}> {
+    try {
+        const offer = await getOfferByCode(offerCode);
+
+        if (!offer) {
+            return { success: false, error: 'Invalid or expired offer code' };
         }
 
-        // Check Dates
-        const now = new Date();
-        if (now < coupon.validFrom) return { error: 'Coupon not yet active' };
-        if (now > coupon.validUntil) return { error: 'Coupon expired' };
+        // Check usage limit
+        if (offer.usageLimit && offer.usedCount >= offer.usageLimit) {
+            return { success: false, error: 'Offer usage limit reached' };
+        }
 
         // Calculate discount
-        const result = calculatePricing(cartItems, {
-            type: coupon.type,
-            value: Number(coupon.value),
-            minAmount: Number(coupon.minOrderValue || 0),
-            maxDiscount: coupon.maxDiscount ? Number(coupon.maxDiscount) : undefined
-        });
+        const result = calculateOfferDiscount(cartItems, offer as OfferType);
 
-        const globalSubtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        const finalTotal = globalSubtotal - result.discountTotal;
-
-        if (result.discountTotal === 0 && result.subtotal > 0) {
-            if (coupon.minOrderValue && result.subtotal < Number(coupon.minOrderValue)) {
-                return { error: `Minimum order amount of ₹${coupon.minOrderValue} not met` };
-            }
+        if (result.discount === 0) {
+            return { success: false, error: result.description };
         }
 
-        return {
-            success: true,
-            offerCode: coupon.code,
-            couponId: coupon._id.toString(), // NEW: Return coupon ID for order linking
-            subtotal: globalSubtotal,
-            discountTotal: result.discountTotal,
-            finalTotal: finalTotal,
-        };
-    } catch (e) {
-        console.error("Validation error", e);
-        return { error: 'Validation failed' };
+        return { success: true, result };
+    } catch (error) {
+        console.error('Error applying offer:', error);
+        return { success: false, error: 'Failed to apply offer' };
     }
+}
+
+/**
+ * Increment offer usage count (call when order is placed)
+ */
+export async function incrementOfferUsage(offerCode: string) {
+    try {
+        await dbConnect();
+        await Offer.findOneAndUpdate(
+            { code: offerCode.toUpperCase() },
+            { $inc: { usedCount: 1 } }
+        );
+        return { success: true };
+    } catch (error) {
+        console.error('Error incrementing offer usage:', error);
+        return { success: false, error: 'Failed to update offer usage' };
+    }
+}
+
+// ============================================
+// ADMIN FUNCTIONS
+// ============================================
+
+/**
+ * Get all offers (admin)
+ */
+export async function getAllOffers() {
+    try {
+        await dbConnect();
+        const offers = await Offer.find()
+            .sort({ priority: -1, createdAt: -1 })
+            .lean();
+        return { success: true, offers: serialize(offers) };
+    } catch (error) {
+        console.error('Error fetching offers:', error);
+        return { success: false, error: 'Failed to fetch offers' };
+    }
+}
+
+/**
+ * Get offer by ID (admin)
+ */
+export async function getOfferById(id: string) {
+    try {
+        await dbConnect();
+        const offer = await Offer.findById(id).lean();
+        if (!offer) return { success: false, error: 'Offer not found' };
+        return { success: true, offer: serialize(offer) };
+    } catch (error) {
+        console.error('Error fetching offer:', error);
+        return { success: false, error: 'Failed to fetch offer' };
+    }
+}
+
+/**
+ * Create new offer (admin)
+ */
+export async function createOffer(offerData: any) {
+    try {
+        await dbConnect();
+
+        // Ensure code is uppercase
+        offerData.code = offerData.code.toUpperCase();
+
+        // Check if code already exists
+        const existing = await Offer.findOne({ code: offerData.code });
+        if (existing) {
+            return { success: false, error: 'Offer code already exists' };
+        }
+
+        const offer = await Offer.create(offerData);
+        revalidatePath('/admin/marketing/offers');
+        revalidatePath('/offers');
+
+        return { success: true, offer: serialize(offer) };
+    } catch (error: any) {
+        console.error('Error creating offer:', error);
+        return { success: false, error: error.message || 'Failed to create offer' };
+    }
+}
+
+/**
+ * Update offer (admin)
+ */
+export async function updateOffer(id: string, offerData: any) {
+    try {
+        await dbConnect();
+
+        // Ensure code is uppercase
+        if (offerData.code) {
+            offerData.code = offerData.code.toUpperCase();
+        }
+
+        const offer = await Offer.findByIdAndUpdate(
+            id,
+            offerData,
+            { new: true, runValidators: true }
+        );
+
+        if (!offer) {
+            return { success: false, error: 'Offer not found' };
+        }
+
+        revalidatePath('/admin/marketing/offers');
+        revalidatePath('/offers');
+
+        return { success: true, offer: serialize(offer) };
+    } catch (error: any) {
+        console.error('Error updating offer:', error);
+        return { success: false, error: error.message || 'Failed to update offer' };
+    }
+}
+
+/**
+ * Delete offer (admin)
+ */
+export async function deleteOffer(id: string) {
+    try {
+        await dbConnect();
+        const offer = await Offer.findByIdAndDelete(id);
+
+        if (!offer) {
+            return { success: false, error: 'Offer not found' };
+        }
+
+        revalidatePath('/admin/marketing/offers');
+        revalidatePath('/offers');
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting offer:', error);
+        return { success: false, error: 'Failed to delete offer' };
+    }
+}
+
+/**
+ * Toggle offer active status (admin)
+ */
+export async function toggleOfferStatus(id: string) {
+    try {
+        await dbConnect();
+        const offer = await Offer.findById(id);
+
+        if (!offer) {
+            return { success: false, error: 'Offer not found' };
+        }
+
+        offer.isActive = !offer.isActive;
+        await offer.save();
+
+        revalidatePath('/admin/marketing/offers');
+        revalidatePath('/offers');
+
+        return { success: true, isActive: offer.isActive };
+    } catch (error) {
+        console.error('Error toggling offer status:', error);
+        return { success: false, error: 'Failed to toggle offer status' };
+    }
+}
+
+/**
+ * Validate coupon code (legacy function for backward compatibility)
+ * This is an alias for applyOfferToCart
+ */
+export async function validateCoupon(code: string, cartItems: any[]) {
+    return await applyOfferToCart(code, cartItems);
 }

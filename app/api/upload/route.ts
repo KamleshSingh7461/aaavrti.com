@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
             const result = await new Promise((resolve, reject) => {
                 cloudinary.uploader.upload_stream(
                     {
-                        folder: 'aaavrti/products',
+                        folder: 'ournika/products',
                         resource_type: 'auto',
                         transformation: [
                             { quality: 'auto:good' },

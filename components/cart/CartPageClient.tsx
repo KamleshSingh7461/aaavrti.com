@@ -150,7 +150,7 @@ export function CartPageClient({ initialRecommendedProducts }: CartPageClientPro
                                 <div className="flex-1 flex flex-col justify-between">
                                     <div>
                                         <Link
-                                            href={`/product/${item.id}`}
+                                            href={`/product/${item.slug}`}
                                             className={cn("text-xl font-light hover:text-primary transition-colors line-clamp-2", cormorant.className)}
                                         >
                                             {item.name_en}

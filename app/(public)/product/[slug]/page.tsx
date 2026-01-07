@@ -1,5 +1,5 @@
 
-import { getProductById, getProducts } from '@/actions/get-products';
+import { getProductBySlug, getProducts } from '@/actions/get-products';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Metadata } from 'next';
@@ -12,25 +12,25 @@ import { FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/motion';
 
 interface ProductPageProps {
     params: Promise<{
-        id: string;
+        slug: string;
     }>;
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-    const { id } = await params;
-    const product = await getProductById(id);
+    const { slug } = await params;
+    const product = await getProductBySlug(slug);
 
     if (!product) return { title: 'Product Not Found' };
 
     return {
-        title: `${product.name_en} | Aaavrti`,
+        title: `${product.name_en} | Ournika`,
         description: product.description_en.substring(0, 160),
     };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-    const { id } = await params;
-    const product = await getProductById(id);
+    const { slug } = await params;
+    const product = await getProductBySlug(slug);
 
     if (!product) {
         notFound();
@@ -42,8 +42,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     // Fetch Reviews & Eligibility
     const { getProductReviews, canReviewProduct } = await import('@/actions/review-actions');
-    const reviews = await getProductReviews(id);
-    const canReview = await canReviewProduct(id);
+    const reviews = await getProductReviews(product.id);
+    const canReview = await canReviewProduct(product.id);
 
     // Fetch Applicable Offers
     const { getApplicableOffers } = await import('@/actions/offer-actions');

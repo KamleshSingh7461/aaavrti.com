@@ -7,13 +7,15 @@ import mongoose from 'mongoose';
 
 import { serialize } from '@/lib/serialize';
 
-export async function getCategories() {
+export async function getCategories(options: { publicOnly?: boolean } = {}) {
     try {
         await dbConnect();
 
         // Use aggregation to get counts
         // $lookup to get children count and product count
         const categories = await Category.aggregate([
+            // Inherit sort from initial query or apply later
+            // We fetch ALL to determine hierarchy visibility
             {
                 $lookup: {
                     from: 'products',
@@ -25,8 +27,23 @@ export async function getCategories() {
             {
                 $lookup: {
                     from: 'categories',
-                    localField: '_id',
-                    foreignField: 'parentId',
+                    let: { parentId: '$_id' },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ['$parentId', '$$parentId'] } } },
+                        { $sort: { sortOrder: 1, name_en: 1 } },
+                        {
+                            $lookup: {
+                                from: 'products',
+                                let: { childId: '$_id' },
+                                pipeline: [
+                                    { $match: { $expr: { $eq: ['$categoryId', '$$childId'] } } },
+                                    { $sort: { createdAt: -1 } },
+                                    { $limit: 2 }
+                                ],
+                                as: 'featuredProducts'
+                            }
+                        }
+                    ],
                     as: 'children'
                 }
             },
@@ -45,10 +62,23 @@ export async function getCategories() {
                 }
             },
             {
+                $lookup: {
+                    from: 'products',
+                    let: { catId: '$_id' },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ['$categoryId', '$$catId'] } } },
+                        { $sort: { createdAt: -1 } },
+                        { $limit: 2 }
+                    ],
+                    as: 'featuredProducts'
+                }
+            },
+            {
                 $addFields: {
                     '_count.products': { $size: '$products' },
-                    '_count.children': { $size: '$children' }
-                    // Note: products and children arrays are now heavy, project them out
+                    '_count.children': { $size: '$children' },
+                    // Ensure isActive is boolean
+                    isActive: { $ifNull: ['$isActive', true] }
                 }
             },
             {
@@ -61,6 +91,31 @@ export async function getCategories() {
                 $sort: { sortOrder: 1, createdAt: 1 }
             }
         ]);
+
+        // If publicOnly, filter out categories that are inactive OR have inactive ancestors
+        if (options.publicOnly) {
+            const categoryMap = new Map<string, any>();
+            categories.forEach(cat => categoryMap.set(cat._id.toString(), cat));
+
+            const isEffectivelyActive = (cat: any): boolean => {
+                // Self check
+                if (!cat.isActive) return false;
+
+                // Ancestor check
+                if (cat.parentId) {
+                    const parent = categoryMap.get(cat.parentId.toString());
+                    // If parent exists in our list, check it. If parent missing (deleted?), treat as orphan (active if self is active) or hidden?
+                    // Let's assume if parent is missing from DB, it's virtually root.
+                    if (parent) {
+                        return isEffectivelyActive(parent);
+                    }
+                }
+                return true;
+            };
+
+            const visibleCategories = categories.filter(cat => isEffectivelyActive(cat));
+            return serialize(visibleCategories);
+        }
 
         return serialize(categories);
 
@@ -143,12 +198,15 @@ export async function getCategoryById(id: string) {
     }
 }
 
+
+
 export async function createCategory(formData: FormData) {
     const name_en = formData.get('name_en') as string;
     const name_hi = formData.get('name_hi') as string;
     const slug = formData.get('slug') as string;
     const parentId = formData.get('parentId') as string;
     const image = formData.get('image') as string;
+    const isActive = formData.get('isActive') === 'true';
 
     if (!name_en || !slug) {
         return { error: 'Name and slug are required' };
@@ -169,6 +227,7 @@ export async function createCategory(formData: FormData) {
             slug,
             image: image || null,
             parentId: parentId || null,
+            isActive
         });
 
         revalidatePath('/categories');
@@ -185,6 +244,7 @@ export async function updateCategory(id: string, formData: FormData) {
     const slug = formData.get('slug') as string;
     const parentId = formData.get('parentId') as string;
     const image = formData.get('image') as string;
+    const isActive = formData.get('isActive') === 'true';
 
     if (!name_en || !slug) {
         return { error: 'Name and slug are required' };
@@ -216,6 +276,7 @@ export async function updateCategory(id: string, formData: FormData) {
             slug,
             image: image || null,
             parentId: parentId || null,
+            isActive
         });
 
         revalidatePath('/categories');
@@ -223,6 +284,22 @@ export async function updateCategory(id: string, formData: FormData) {
     } catch (error) {
         console.error('Error updating category:', error);
         return { error: 'Failed to update category' };
+    }
+}
+
+
+export async function toggleCategoryStatus(id: string, isActive: boolean) {
+    try {
+        await dbConnect();
+        // Verify boolean type just in case
+        const status = isActive === true;
+        await Category.findByIdAndUpdate(id, { isActive: status });
+        revalidatePath('/admin/categories');
+        revalidatePath('/'); // Update storefront 
+        return { success: true };
+    } catch (error) {
+        console.error('Error toggling category status:', error);
+        return { error: 'Failed to toggle status' };
     }
 }
 
@@ -244,7 +321,8 @@ export async function deleteCategory(id: string) {
 
         await Category.findByIdAndDelete(id);
 
-        revalidatePath('/categories');
+        revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error('Error deleting category:', error);

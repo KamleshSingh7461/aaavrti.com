@@ -14,9 +14,9 @@ export function MobileBottomNav() {
 
     const navItems = [
         { href: '/', label: 'Home', icon: Home },
-        { href: '/category/women', label: 'Shop', icon: Grid },
+        { href: '/products', label: 'Shop', icon: Grid },
+        { label: 'Cart', icon: ShoppingBag, onClick: toggleCart, badge: cartItems.length, isMain: true },
         { href: '/account/wishlist', label: 'Wishlist', icon: Heart, badge: wishlistItems.length },
-        { label: 'Bag', icon: ShoppingBag, onClick: toggleCart, badge: cartItems.length },
         { href: '/account', label: 'Account', icon: User },
     ];
 
@@ -26,18 +26,27 @@ export function MobileBottomNav() {
                 {navItems.map((item, idx) => {
                     const isActive = item.href ? (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) : false;
                     const Icon = item.icon;
+                    const isCart = item.label === 'Cart';
 
                     const Content = (
                         <>
-                            <div className="relative">
-                                <Icon className={cn("h-5 w-5 transition-transform duration-300", isActive && "scale-110")} />
+                            <div className={cn("relative", isCart && "bg-primary text-primary-foreground p-3 rounded-full -mt-8 shadow-lg border-4 border-background")}>
+                                <Icon className={cn(
+                                    "transition-transform duration-300",
+                                    isCart ? "h-6 w-6" : "h-5 w-5",
+                                    isActive && !isCart && "scale-110"
+                                )} />
                                 {item.badge !== undefined && item.badge > 0 && (
-                                    <span className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full">
+                                    <span className={cn(
+                                        "absolute bg-red-600 text-white text-[10px] font-bold flex items-center justify-center rounded-full ring-2 ring-background",
+                                        isCart ? "-top-1 -right-1 h-5 w-5" : "-top-1.5 -right-1.5 h-4 w-4 bg-primary text-primary-foreground"
+                                    )}>
                                         {item.badge}
                                     </span>
                                 )}
                             </div>
-                            <span className="text-[10px] font-medium tracking-tight mt-1">{item.label}</span>
+                            {!isCart && <span className="text-[10px] font-medium tracking-tight mt-1">{item.label}</span>}
+                            {isCart && <span className="text-[10px] font-bold tracking-tight mt-1 text-primary hidden">{item.label}</span>}
                         </>
                     );
 
@@ -47,8 +56,9 @@ export function MobileBottomNav() {
                                 key={idx}
                                 onClick={item.onClick}
                                 className={cn(
-                                    "flex flex-col items-center justify-center w-full transition-colors",
-                                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                                    "flex flex-col items-center justify-center w-full transition-colors relative",
+                                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                                    isCart && "overflow-visible"
                                 )}
                             >
                                 {Content}

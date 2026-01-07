@@ -135,6 +135,13 @@ export default async function AccountPage() {
                                 >
                                     Track Order
                                 </Link>
+                                <Link
+                                    href={`/account/orders/${recentOrder.id}/invoice`}
+                                    target="_blank"
+                                    className="bg-secondary text-secondary-foreground text-xs uppercase tracking-widest font-bold px-6 py-3 rounded-xl hover:bg-secondary/80 transition-all text-center"
+                                >
+                                    Invoice
+                                </Link>
                             </div>
                         </div>
                     ) : (

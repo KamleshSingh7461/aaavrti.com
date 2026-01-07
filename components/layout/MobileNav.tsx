@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription, SheetHeader } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronRight, Search, User } from "lucide-react";
+import { Menu, X, ChevronRight, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
@@ -18,9 +18,10 @@ const cormorant = Cormorant_Garamond({
 interface MobileNavProps {
     categories: CategoryWithChildren[];
     user?: any;
+    onSearchClick?: () => void;
 }
 
-export function MobileNav({ categories, user }: MobileNavProps) {
+export function MobileNav({ categories, user, onSearchClick }: MobileNavProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     // Filter top-level categories
@@ -28,15 +29,33 @@ export function MobileNav({ categories, user }: MobileNavProps) {
 
     const isLoggedIn = !!user;
 
+    const handleSearchTrigger = () => {
+        setIsOpen(false);
+        onSearchClick?.();
+    };
+
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-6 w-6" />
-                    <span className="sr-only">Open Menu</span>
+                <Button variant="ghost" size="icon" className="md:hidden relative z-50">
+                    <div className="relative h-6 w-6">
+                        <Menu
+                            className={cn(
+                                "h-6 w-6 absolute inset-0 transition-all duration-300 ease-in-out",
+                                isOpen ? "opacity-0 rotate-90 scale-50" : "opacity-100 rotate-0 scale-100"
+                            )}
+                        />
+                        <X
+                            className={cn(
+                                "h-6 w-6 absolute inset-0 transition-all duration-300 ease-in-out",
+                                isOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-50"
+                            )}
+                        />
+                    </div>
+                    <span className="sr-only">Toggle Menu</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0 flex flex-col h-full max-h-[100dvh]">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0 flex flex-col h-full max-h-[100dvh]">
                 <SheetHeader className="sr-only">
                     <SheetTitle>Navigation Menu</SheetTitle>
                     <SheetDescription>Browse categories and account links</SheetDescription>
@@ -45,14 +64,13 @@ export function MobileNav({ categories, user }: MobileNavProps) {
                 {/* Scrollable Container */}
                 <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col p-6">
                     {/* Search Bar - Top */}
-                    <div className="mb-8 relative">
+                    <div className="mb-8 relative" onClick={handleSearchTrigger}>
+                        <div className="absolute inset-0 z-10 cursor-pointer" />
                         <input
                             type="text"
                             placeholder="Search your fashion store"
-                            className="w-full h-12 border-b border-black/20 text-lg placeholder:text-black/40 focus:outline-none focus:border-black transition-colors rounded-none bg-transparent"
-                            onClick={() => {
-                                // Optional: trigger search modal if we want full search UI, or just keep as simple input
-                            }}
+                            readOnly
+                            className="w-full h-12 border-b border-black/20 text-lg placeholder:text-black/40 focus:outline-none focus:border-black transition-colors rounded-none bg-transparent cursor-pointer"
                         />
                         <Search className="absolute right-0 top-3 h-6 w-6 text-black/40" />
                     </div>

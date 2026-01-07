@@ -23,7 +23,7 @@ interface SenderIdentity {
 // Configurable Sender Identities
 // You can define these in your .env file
 const getSender = (category: EmailCategory): SenderIdentity => {
-    const domain = process.env.NEXT_PUBLIC_APP_URL ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname : 'aaavrti.shop';
+    const domain = process.env.NEXT_PUBLIC_APP_URL ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname : 'ournika.com';
 
     // Default fallback addresses (user can override via ENV if needed, or we just generate them)
     // NOTE: If using Gmail SMTP, the 'email' part is often overwritten by Google to the authenticated user.
@@ -32,28 +32,28 @@ const getSender = (category: EmailCategory): SenderIdentity => {
     switch (category) {
         case 'OTP':
             return {
-                name: process.env.EMAIL_NAME_OTP || 'Aaavrti Security',
+                name: process.env.EMAIL_NAME_OTP || 'Ournika Security',
                 email: process.env.EMAIL_ADDR_OTP || `security@${domain}`
             };
         case 'WELCOME':
             return {
-                name: process.env.EMAIL_NAME_WELCOME || 'Aaavrti Community',
+                name: process.env.EMAIL_NAME_WELCOME || 'Ournika Community',
                 email: process.env.EMAIL_ADDR_WELCOME || `welcome@${domain}`
             };
         case 'ORDER':
             return {
-                name: process.env.EMAIL_NAME_ORDER || 'Aaavrti Orders',
+                name: process.env.EMAIL_NAME_ORDER || 'Ournika Orders',
                 email: process.env.EMAIL_ADDR_ORDER || `orders@${domain}`
             };
         case 'NEWSLETTER':
             return {
-                name: process.env.EMAIL_NAME_NEWSLETTER || 'Aaavrti Newsletter',
+                name: process.env.EMAIL_NAME_NEWSLETTER || 'Ournika Newsletter',
                 email: process.env.EMAIL_ADDR_NEWSLETTER || `newsletter@${domain}`
             };
         case 'ALERT':
         default:
             return {
-                name: process.env.EMAIL_NAME_DEFAULT || 'Aaavrti',
+                name: process.env.EMAIL_NAME_DEFAULT || 'Ournika',
                 email: process.env.EMAIL_ADDR_DEFAULT || `no-reply@${domain}`
             };
     }

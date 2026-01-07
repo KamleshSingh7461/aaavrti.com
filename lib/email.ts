@@ -12,12 +12,12 @@ export async function sendVerificationEmail(email: string, otp: string) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'Aaavrti <no-reply@aaavrti.shop>',
+            from: 'Ournika <no-reply@ournika.com>',
             to: [email],
-            subject: 'Verify your Aaavrti Account',
+            subject: 'Verify your Ournika Account',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Welcome to Aaavrti!</h2>
+                    <h2>Welcome to Ournika!</h2>
                     <p>Thank you for signing up. Please use the following One-Time Password (OTP) to verify your account:</p>
                     <div style="background-color: #f4f4f4; padding: 20px; text-align: center; border-radius: 5px; font-size: 24px; letter-spacing: 5px; font-weight: bold;">
                         ${otp}
