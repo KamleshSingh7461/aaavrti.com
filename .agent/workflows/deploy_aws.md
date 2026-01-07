@@ -4,7 +4,92 @@ description: Deploy Next.js App to AWS EC2 (Amazon Linux 2023)
 
 # AWS EC2 Deployment Guide
 
-## 1. Launch Instance (User Action)
+## 🚀 Fast Track: Copy-Paste Deployment (EC2 Instance Connect)
+
+Open the **EC2 Instance Connect** terminal (browser) and run these commands block by block.
+
+### Block 1: System Setup (Swap & Tools)
+```bash
+# Become root
+sudo su -
+
+# Create 4GB Swap (Required for Next.js build on t3.micro)
+dd if=/dev/zero of=/swapfile bs=128M count=32
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+
+# Install Node.js 20, Git, Nginx
+curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+dnf install -y nodejs git nginx
+
+# Start Nginx
+systemctl start nginx
+systemctl enable nginx
+
+# Install PM2
+npm install -g pm2
+```
+
+### Block 2: Clone & Build
+```bash
+# Clone Repository
+git clone https://github.com/KamleshSingh7461/aaavrti.com.git
+
+# Enter Directory
+cd aaavrti.com
+
+# Install Dependencies
+npm ci --legacy-peer-deps
+
+# Build the App (This may take 1-2 mins)
+npm run build
+```
+
+### Block 3: Start & Expose
+```bash
+# Start with PM2
+pm2 start npm --name "aaavrti" -- start
+pm2 save
+pm2 startup systemd | bash
+
+# Configure Nginx (Reverse Proxy)
+cat > /etc/nginx/conf.d/aaavrti.conf <<EOL
+server {
+    listen 80;
+    server_name _; 
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOL
+
+# Restart Nginx to apply changes
+systemctl restart nginx
+```
+
+### Final Step: Secrets
+You must manually create the `.env` file.
+```bash
+nano .env
+```
+*Paste your `.env` content here. Press `Ctrl+O`, `Enter` to save, then `Ctrl+X` to exit.*
+
+Then restart:
+```bash
+pm2 restart aaavrti
+```
+
+---
+## Old Detailed Guide (Reference)
+
 - **OS**: Amazon Linux 2023
 - **Instance Type**: t3.micro
 - **Security Group**: Allow SSH (22), HTTP (80), HTTPS (443)
@@ -86,7 +171,7 @@ Paste the following:
 ```nginx
 server {
     listen 80;
-    server_name aaavrti.shop www.aaavrti.shop;
+    server_name _;  # Catches all requests (IP address access)
 
     location / {
         proxy_pass http://localhost:3000;
@@ -98,6 +183,8 @@ server {
     }
 }
 ```
+
+*Note: `server_name _;` allows you to access the site via your Public IP address immediately.*
 
 Restart Nginx:
 ```bash

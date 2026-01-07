@@ -120,3 +120,15 @@ export async function registerWithOtp(data: { email: string, name: string, otp: 
 export async function handleSignOut() {
     await signOut({ redirectTo: '/' });
 }
+
+export async function authenticateAdmin(prevState: string | undefined, formData: FormData) {
+    try {
+        await signIn('credentials', formData);
+    } catch (error: any) {
+        if (error.type === 'CredentialsSignin') {
+            return 'Invalid credentials.';
+        }
+        // Next.js Redirect throws error, we must rethrow it
+        throw error;
+    }
+}

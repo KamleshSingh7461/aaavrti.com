@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { verifyOtp, resendOtp } from '@/actions/auth-actions';
+import { verifyOtp, sendOtp } from '@/actions/auth-actions';
 import { Outfit } from 'next/font/google';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -54,8 +54,12 @@ export default function VerifyPage() {
     const handleResend = async () => {
         if (!email) return;
         setResendStatus('Sending...');
-        const res = await resendOtp(email);
-        setResendStatus(res.message);
+        const res = await sendOtp(email);
+        if (res.success) {
+            setResendStatus('Code sent!');
+        } else {
+            setResendStatus(res.error || 'Failed to send');
+        }
     };
 
     if (!email) {

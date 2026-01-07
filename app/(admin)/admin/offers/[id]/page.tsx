@@ -3,7 +3,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { createOffer, getOffer, updateOffer } from '@/actions/offer-actions';
+import { createOffer, getOfferById, updateOffer } from '@/actions/offer-actions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Info } from 'lucide-react';
 import Link from 'next/link';
@@ -37,8 +37,8 @@ export default function OfferFormPage({ params }: { params: Promise<{ id: string
     }, [id]);
 
     const loadOffer = async () => {
-        const offer = await getOffer(id);
-        if (!offer) {
+        const { success, offer } = await getOfferById(id);
+        if (!success || !offer) {
             toast({ title: 'Offer not found', variant: 'destructive' });
             router.push('/admin/offers');
             return;
